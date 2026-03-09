@@ -127,3 +127,13 @@
 - The benchmark path is more credible because it now has a self-contained regression check.
 - CI coverage stays intentionally small: verify the narrow v0.1 path, not a bunch of speculative integrations.
 - This is a cleaner answer to “can I trust these benchmark artifacts?” than telling people to reproduce a very specific local machine setup.
+
+## 2026-03-09 — explicit standalone rule: no active AgentGym dependency
+- Recorded a project rule that AgentGlue must remain fully standalone.
+- AgentGym is now treated as deprecated historical origin only, not an active dependency or default benchmark target.
+- Active cleanup direction going forward:
+  - no runtime dependency on AgentGym
+  - no test dependency on AgentGym
+  - no benchmark dependency on AgentGym as required/default target
+  - no examples requiring AgentGym
+  - no outward-facing messaging that implies AgentGlue still depends on AgentGym
