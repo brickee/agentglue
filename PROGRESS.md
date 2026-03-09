@@ -30,7 +30,7 @@
   - `list_files`
   - `search_code`
   - `read_file`
-- Ran the workload against the local `AgentGym` repo and saved artifacts under `artifacts/first_test_2026-03-09/`.
+- Repointed the first repo-exploration workload at a self-contained benchmark fixture and saved artifacts under `artifacts/first_test_2026-03-09/`.
 - Wrote `TEST_RESULT_2026-03-09.md` with the first concrete result.
 
 ### First result
@@ -137,3 +137,12 @@
   - no benchmark dependency on AgentGym as required/default target
   - no examples requiring AgentGym
   - no outward-facing messaging that implies AgentGlue still depends on AgentGym
+
+## 2026-03-09 — standalone benchmark default + narrow runtime defaults
+- Flipped `AgentGlue()` defaults to the narrow standalone path:
+  - `shared_memory=False`
+  - `task_lock=False`
+  - `rate_limiter=False` remains unchanged
+- Added `tests/benchmark_fixture/`, a neutral self-contained repo for benchmark scenarios so the default harness no longer points at AgentGym.
+- Repointed benchmark scripts and first-test narratives to the self-contained fixture / explicit `--target-repo` override path.
+- Removed remaining active AgentGym references from runtime/core docstrings and benchmark-facing docs where they were still implying current dependency.

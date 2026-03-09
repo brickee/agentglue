@@ -137,6 +137,14 @@ def test_metrics():
     assert "Underlying executions" in report
 
 
+def test_glue_runtime_defaults_stay_narrow():
+    glue = AgentGlue()
+
+    assert glue.memory_enabled is False
+    assert glue.task_lock_enabled is False
+    assert glue.rate_limiter_enabled is False
+
+
 def test_glue_integration_and_invalidation():
     glue = AgentGlue(rate_limiter=False, shared_memory=True)
     call_count = 0
@@ -343,9 +351,9 @@ def test_export_events_jsonl_roundtrip(tmp_path):
     assert reloaded["duplicate_analysis"] == exported["duplicate_analysis"]
 
 
-def test_benchmark_harness_supports_fixture_repo(tmp_path):
+def test_benchmark_harness_supports_benchmark_fixture(tmp_path):
     repo_root = Path(__file__).resolve().parents[1]
-    fixture_repo = repo_root / "tests" / "fixture_repo"
+    fixture_repo = repo_root / "tests" / "benchmark_fixture"
     artifact_root = tmp_path / "benchmarks"
 
     command = [
@@ -392,6 +400,7 @@ if __name__ == "__main__":
         test_rate_limiter,
         test_rate_limiter_no_limit,
         test_metrics,
+        test_glue_runtime_defaults_stay_narrow,
         test_glue_integration_and_invalidation,
         test_glue_report_and_events,
         test_detect_duplicates_understands_runtime_dedup_events,

@@ -3,7 +3,7 @@
 ## Verdict
 **Yes — AgentGlue helped meaningfully on this workload.**
 
-On a small but real multi-agent-style repo exploration run against the local `AgentGym` codebase, AgentGlue v0.1 reduced **underlying tool executions from 20 to 11** by deduplicating repeated `list_files`, `search_code`, and `read_file` calls.
+On a small but real multi-agent-style repo exploration run against the self-contained benchmark fixture, AgentGlue v0.1 reduced **underlying tool executions from 20 to 11** by deduplicating repeated `list_files`, `search_code`, and `read_file` calls.
 
 That is **9 calls saved (45%)** with a very understandable trace. For a first pass, that is real signal, not middleware fan fiction.
 
@@ -12,7 +12,7 @@ That is **9 calls saved (45%)** with a very understandable trace. For a first pa
 ## What was tested
 
 ### Target repo
-- Repo: `/home/ubuntu/.openclaw/workspace/projects/AgentGym`
+- Repo: `/home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/benchmark_fixture`
 - Shape: medium-ish local Python repo used as a deterministic exploration target
 
 ### Workflow shape
@@ -41,9 +41,9 @@ The agents explored overlapping questions around:
 - benchmark metric aggregation in `runner.py`
 
 This produced natural overlap on core files such as:
-- `src/agentgym/core/allocator.py`
-- `src/agentgym/core/replay.py`
-- `src/agentgym/eval/runner.py`
+- `src/coordination_demo/core/allocator.py`
+- `src/coordination_demo/core/replay.py`
+- `src/coordination_demo/eval/runner.py`
 
 ---
 
@@ -94,19 +94,19 @@ Caveat: the wall-clock win is encouraging, but the more robust claim is the exec
 
 Duplicate intents present in the workload:
 
-1. `list_files(path="src/agentgym/core", max_entries=20)`
+1. `list_files(path="src/coordination_demo/core", max_entries=20)`
    - Seen by: `agent-a`, `agent-b`, `agent-d`
    - Duplicates: **2**
 
-2. `read_file(path="src/agentgym/core/replay.py", start_line=1, end_line=140)`
+2. `read_file(path="src/coordination_demo/core/replay.py", start_line=1, end_line=140)`
    - Seen by: `agent-a`, `agent-b`, `agent-d`
    - Duplicates: **2**
 
-3. `read_file(path="src/agentgym/core/allocator.py", start_line=1, end_line=120)`
+3. `read_file(path="src/coordination_demo/core/allocator.py", start_line=1, end_line=120)`
    - Seen by: `agent-a`, `agent-b`
    - Duplicates: **1**
 
-4. `read_file(path="src/agentgym/eval/runner.py", start_line=320, end_line=420)`
+4. `read_file(path="src/coordination_demo/eval/runner.py", start_line=320, end_line=420)`
    - Seen by: `agent-c`, `agent-d`
    - Duplicates: **1**
 
@@ -135,12 +135,12 @@ This is exactly the expected pattern for repo exploration: agents converge on th
 
 Representative real commands executed under the wrapped tools:
 
-- `find "src/agentgym/core" -type f | sed 's#^./##' | sort | head -n 20`
+- `find "src/coordination_demo/core" -type f | sed 's#^./##' | sort | head -n 20`
 - `grep -RIn --binary-files=without-match -E "TokenBucket|rate_limit" src tests | head -n 20`
-- `sed -n '1,120p' "src/agentgym/core/allocator.py"`
+- `sed -n '1,120p' "src/coordination_demo/core/allocator.py"`
 - `grep -RIn --binary-files=without-match -E "replay_duplicate_decomposition|replay_invariant_precheck" src tests | head -n 20`
-- `sed -n '1,140p' "src/agentgym/core/replay.py"`
-- `sed -n '320,420p' "src/agentgym/eval/runner.py"`
+- `sed -n '1,140p' "src/coordination_demo/core/replay.py"`
+- `sed -n '320,420p' "src/coordination_demo/eval/runner.py"`
 
 The event trace shows the expected pattern:
 - `agent-a` executes several cold calls

@@ -1,7 +1,6 @@
 """Event schema for AgentGlue runtime.
 
-Adapted from AgentGym's DES event model. Uses real timestamps instead of
-simulation time.
+Uses real timestamps for a lightweight runtime event stream.
 """
 
 import time

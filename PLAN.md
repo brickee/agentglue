@@ -44,7 +44,7 @@ Tools / APIs
 - [x] Repo scaffolding
 - [x] README with vision and API sketch
 - [x] PLAN.md / PROGRESS.md / NEXT_TODO.md
-- [x] Reuse core modules from AgentGym (allocator, events, recorder, metrics)
+- [x] Import the minimal core helpers needed for allocator / events / recorder / metrics
 - [x] pyproject.toml + basic package structure
 
 ### M1 — v0.1: Dedup + Cache + Baseline Observability

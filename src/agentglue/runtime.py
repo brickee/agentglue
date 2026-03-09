@@ -19,7 +19,7 @@ class AgentGlue:
     """Main entry point for AgentGlue middleware.
 
     Usage:
-        glue = AgentGlue()
+        glue = AgentGlue(shared_memory=False, rate_limiter=False, task_lock=False)
 
         @glue.tool()
         def search(query: str) -> str:
@@ -32,11 +32,11 @@ class AgentGlue:
         self,
         dedup: bool = True,
         dedup_ttl: float = 300.0,
-        shared_memory: bool = True,
+        shared_memory: bool = False,
         memory_ttl: float = 600.0,
         rate_limiter: bool = False,
         rate_limits: Dict[str, float] | None = None,
-        task_lock: bool = True,
+        task_lock: bool = False,
         record_events: bool = True,
     ):
         self.metrics = GlueMetrics()

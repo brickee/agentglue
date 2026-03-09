@@ -1,6 +1,6 @@
 """Resource allocator with token-bucket rate limiting and backpressure.
 
-Ported from AgentGym. Used by RateCoordinator to manage cross-agent
+Used by AgentGlue's optional rate-coordination path to manage cross-agent
 rate limits on shared tools/APIs.
 """
 

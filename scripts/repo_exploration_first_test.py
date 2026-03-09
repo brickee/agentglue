@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """First real AgentGlue repo-exploration test.
 
-Runs a small deterministic multi-agent-style workload against the local AgentGym
-repo using real shell-backed tools:
+Runs a small deterministic multi-agent-style workload against a self-contained
+benchmark fixture using real shell-backed tools:
 - list_files
 - search_code
 - read_file
@@ -30,7 +30,7 @@ if str(SRC_ROOT) not in sys.path:
 from agentglue import AgentGlue  # noqa: E402
 from agentglue.core.recorder import detect_duplicates  # noqa: E402
 
-TARGET_REPO = Path("/home/ubuntu/.openclaw/workspace/projects/AgentGym")
+TARGET_REPO = REPO_ROOT / "tests" / "benchmark_fixture"
 ARTIFACT_DIR = REPO_ROOT / "artifacts" / "first_test_2026-03-09"
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -109,32 +109,32 @@ def make_tools(exec_logger: ExecLogger) -> Tuple[Callable[..., str], Callable[..
 
 AGENT_PLANS: Dict[str, List[Tuple[str, Dict[str, Any]]]] = {
     "agent-a": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+        ("list_files", {"path": "src/coordination_demo/core", "max_entries": 20}),
         ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
+        ("read_file", {"path": "src/coordination_demo/core/allocator.py", "start_line": 1, "end_line": 120}),
         ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ("read_file", {"path": "src/coordination_demo/core/replay.py", "start_line": 1, "end_line": 140}),
     ],
     "agent-b": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+        ("list_files", {"path": "src/coordination_demo/core", "max_entries": 20}),
         ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
+        ("read_file", {"path": "src/coordination_demo/core/allocator.py", "start_line": 1, "end_line": 120}),
         ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ("read_file", {"path": "src/coordination_demo/core/replay.py", "start_line": 1, "end_line": 140}),
     ],
     "agent-c": [
-        ("list_files", {"path": "src/agentgym/policies", "max_entries": 20}),
+        ("list_files", {"path": "src/coordination_demo/policies", "max_entries": 20}),
         ("search_code", {"pattern": "SharedMemoryPolicy|plan_semantic_duplicates", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/policies/shared_memory.py", "start_line": 1, "end_line": 120}),
+        ("read_file", {"path": "src/coordination_demo/policies/shared_memory.py", "start_line": 1, "end_line": 120}),
         ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
+        ("read_file", {"path": "src/coordination_demo/eval/runner.py", "start_line": 320, "end_line": 420}),
     ],
     "agent-d": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+        ("list_files", {"path": "src/coordination_demo/core", "max_entries": 20}),
         ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
+        ("read_file", {"path": "src/coordination_demo/eval/runner.py", "start_line": 320, "end_line": 420}),
         ("search_code", {"pattern": "EventRecorder|replay_event_distribution", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ("read_file", {"path": "src/coordination_demo/core/replay.py", "start_line": 1, "end_line": 140}),
     ],
 }
 

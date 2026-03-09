@@ -1,7 +1,6 @@
 """Event recording and duplicate detection.
 
-Ported from AgentGym's replay module. Used for observability and
-post-hoc analysis of multi-agent coordination.
+Used for observability and post-hoc analysis of multi-agent coordination.
 """
 
 import json
