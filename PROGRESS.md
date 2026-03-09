@@ -65,3 +65,29 @@
 - The benchmark path is now lightweight but reusable rather than one-off.
 - Main working story: wrap repo-exploration tools, save repeated calls, inspect metrics, and inspect JSONL traces with the recorder analysis aligned to the runtime schema.
 - Best next move if AgentGlue wants a stronger multi-agent claim: add straightforward single-flight / in-flight coalescing for identical calls.
+
+## 2026-03-09 — honest single-flight positioning + broader benchmark coverage
+- Tightened outward-facing messaging in `README.md`, `GO_TO_MARKET.md`, and package metadata so the v0.1 claim is explicit:
+  - exact-match dedup
+  - TTL cache for sequential repeats
+  - single-flight for concurrent identical calls
+  - no claim that merely similar calls are merged
+- Added `examples/basic_report.py`, a tiny inspectable script that shows:
+  - one concurrent identical-call coalescing event
+  - one later cache hit
+  - the real `glue.report()` output
+- Extended `scripts/benchmark_repo_exploration.py` to support multiple scenarios instead of only the clean path.
+- Added a second benchmark scenario, `partial_overlap`, where agents ask related-but-not-identical questions:
+  - overlapping directories
+  - overlapping files with different line windows
+  - similar but non-identical grep patterns
+- Kept artifact generation simple and inspectable:
+  - one `result.json`
+  - one `SUMMARY.md`
+  - one JSONL event log per scenario
+  - one JSONL event log for the concurrent single-flight probe
+
+### Why this matters
+- The benchmark story is stronger because it no longer relies only on the cleanest possible overlap case.
+- The messaging is tighter because it now says exactly when AgentGlue helps and when it doesn’t.
+- The example lowers the cost of inspection for anyone evaluating whether the current v0.1 story is real.

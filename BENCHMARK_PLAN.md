@@ -87,14 +87,24 @@ Call it a win if Scenario A shows all of the following:
 
 ## Nice second scenario
 
-### Scenario B — SWE-style search/read/test loop
+### Scenario B — Partial-overlap repo exploration
 
-Use 2-3 agents working on a narrow bug-fix or refactor task where they repeatedly:
+Use 3-4 agents working on related but not perfectly identical repo questions. Keep the same basic tool surface:
 - search the repo
-- read overlapping files
-- run selected tests
+- read overlapping-but-not-identical file slices
+- list nearby directories
 
-This is valuable, but it is a worse first benchmark than Scenario A because test execution adds noise and failure modes unrelated to AgentGlue v0.1.
+What changes:
+- some calls are exact duplicates
+- some calls are near-misses (`TokenBucket|rate_limit` vs `rate_limit|rate_limited`)
+- some reads hit the same file but different line windows
+
+Why this matters:
+- it is still realistic for coding-agent swarms
+- it shows where exact-match dedup helps
+- it also shows what v0.1 does **not** catch yet, which is important for benchmark honesty
+
+This is a better second scenario than a search/read/test loop because it adds realism without importing test-run noise that AgentGlue is not trying to solve.
 
 ## What not to benchmark first
 - Pure synthetic API spam: too toy.

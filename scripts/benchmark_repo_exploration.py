@@ -6,6 +6,7 @@ Keeps the scope narrow:
 - benchmark repeatability across multiple runs
 - stable JSON artifacts with clear metadata
 - one concurrency probe to show cache-after-first-call vs in-flight coalescing
+- one partial-overlap scenario to show where exact-match dedup stops helping
 """
 
 from __future__ import annotations
@@ -31,37 +32,69 @@ from agentglue.core.recorder import detect_duplicates  # noqa: E402
 
 TARGET_REPO = Path("/home/ubuntu/.openclaw/workspace/projects/AgentGym")
 DEFAULT_ARTIFACT_ROOT = REPO_ROOT / "artifacts" / "benchmarks"
-DEFAULT_SCENARIO = "repo_exploration"
+DEFAULT_SCENARIOS = ["repo_exploration", "partial_overlap"]
 
-AGENT_PLANS: Dict[str, List[Tuple[str, Dict[str, Any]]]] = {
-    "agent-a": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
-        ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
-        ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
-    ],
-    "agent-b": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
-        ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
-        ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
-    ],
-    "agent-c": [
-        ("list_files", {"path": "src/agentgym/policies", "max_entries": 20}),
-        ("search_code", {"pattern": "SharedMemoryPolicy|plan_semantic_duplicates", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/policies/shared_memory.py", "start_line": 1, "end_line": 120}),
-        ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
-    ],
-    "agent-d": [
-        ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
-        ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
-        ("search_code", {"pattern": "EventRecorder|replay_event_distribution", "scope": "src tests", "max_hits": 20}),
-        ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
-    ],
+SCENARIO_PLANS: Dict[str, Dict[str, List[Tuple[str, Dict[str, Any]]]]] = {
+    "repo_exploration": {
+        "agent-a": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+            ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
+            ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ],
+        "agent-b": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+            ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
+            ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ],
+        "agent-c": [
+            ("list_files", {"path": "src/agentgym/policies", "max_entries": 20}),
+            ("search_code", {"pattern": "SharedMemoryPolicy|plan_semantic_duplicates", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/policies/shared_memory.py", "start_line": 1, "end_line": 120}),
+            ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
+        ],
+        "agent-d": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+            ("search_code", {"pattern": "semantic_duplicate_work_count|duplicate_tool_calls", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
+            ("search_code", {"pattern": "EventRecorder|replay_event_distribution", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ],
+    },
+    "partial_overlap": {
+        "agent-a": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+            ("search_code", {"pattern": "TokenBucket|rate_limit", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 1, "end_line": 120}),
+            ("search_code", {"pattern": "replay_duplicate_decomposition|replay_invariant_precheck", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ],
+        "agent-b": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 20}),
+            ("search_code", {"pattern": "rate_limit|rate_limited", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/allocator.py", "start_line": 40, "end_line": 160}),
+            ("search_code", {"pattern": "replay_duplicate_decomposition|replay_event_distribution", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 60, "end_line": 180}),
+        ],
+        "agent-c": [
+            ("list_files", {"path": "src/agentgym/policies", "max_entries": 20}),
+            ("search_code", {"pattern": "SharedMemoryPolicy|plan_semantic_duplicates", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/policies/shared_memory.py", "start_line": 1, "end_line": 120}),
+            ("search_code", {"pattern": "duplicate_tool_calls|duplicate_messages", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 320, "end_line": 420}),
+        ],
+        "agent-d": [
+            ("list_files", {"path": "src/agentgym/core", "max_entries": 30}),
+            ("search_code", {"pattern": "duplicate_tool_calls|semantic_duplicate_work_count", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/eval/runner.py", "start_line": 340, "end_line": 440}),
+            ("search_code", {"pattern": "EventRecorder|replay_event_distribution", "scope": "src tests", "max_hits": 20}),
+            ("read_file", {"path": "src/agentgym/core/replay.py", "start_line": 1, "end_line": 140}),
+        ],
+    },
 }
 
 
@@ -174,14 +207,14 @@ def aggregate_runs(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     return aggregate
 
 
-def run_repo_exploration_baseline() -> Dict[str, Any]:
+def run_scenario_baseline(scenario_name: str, plan: Dict[str, List[Tuple[str, Dict[str, Any]]]]) -> Dict[str, Any]:
     exec_logger = ExecLogger()
     list_files, search_code, read_file = make_repo_tools(exec_logger)
     tool_map = {"list_files": list_files, "search_code": search_code, "read_file": read_file}
 
     observed_calls = []
     started = time.monotonic()
-    for agent_id, steps in AGENT_PLANS.items():
+    for agent_id, steps in plan.items():
         for tool_name, kwargs in steps:
             out = tool_map[tool_name](**kwargs)
             observed_calls.append({
@@ -194,6 +227,7 @@ def run_repo_exploration_baseline() -> Dict[str, Any]:
 
     return {
         "mode": "baseline",
+        "scenario": scenario_name,
         "observed_tool_calls": len(observed_calls),
         "underlying_executions": len(exec_logger.rows),
         "wall_clock_ms": round(wall_clock_ms, 3),
@@ -203,7 +237,7 @@ def run_repo_exploration_baseline() -> Dict[str, Any]:
     }
 
 
-def run_repo_exploration_agentglue(ttl: float) -> Dict[str, Any]:
+def run_scenario_agentglue(scenario_name: str, plan: Dict[str, List[Tuple[str, Dict[str, Any]]]], ttl: float) -> Dict[str, Any]:
     exec_logger = ExecLogger()
     base_list_files, base_search_code, base_read_file = make_repo_tools(exec_logger)
 
@@ -216,7 +250,7 @@ def run_repo_exploration_agentglue(ttl: float) -> Dict[str, Any]:
 
     observed_calls = []
     started = time.monotonic()
-    for agent_id, steps in AGENT_PLANS.items():
+    for agent_id, steps in plan.items():
         for tool_name, kwargs in steps:
             out = tool_map[tool_name](agent_id=agent_id, **kwargs)
             observed_calls.append({
@@ -230,6 +264,7 @@ def run_repo_exploration_agentglue(ttl: float) -> Dict[str, Any]:
     events = glue.recorder.events if glue.recorder else []
     return {
         "mode": "agentglue",
+        "scenario": scenario_name,
         "summary": {**glue.summary(), "wall_clock_ms": round(wall_clock_ms, 3)},
         "report": glue.report(),
         "observed_tool_calls": len(observed_calls),
@@ -295,11 +330,17 @@ def run_concurrent_probe() -> Dict[str, Any]:
     }
 
 
-def run_repo_exploration_harness(runs: int, ttl: float) -> Dict[str, Any]:
-    baseline_runs = [run_repo_exploration_baseline() for _ in range(runs)]
-    glue_runs = [run_repo_exploration_agentglue(ttl=ttl) for _ in range(runs)]
+def run_scenario_harness(scenario_name: str, runs: int, ttl: float) -> Dict[str, Any]:
+    plan = SCENARIO_PLANS[scenario_name]
+    baseline_runs = [run_scenario_baseline(scenario_name, plan) for _ in range(runs)]
+    glue_runs = [run_scenario_agentglue(scenario_name, plan, ttl=ttl) for _ in range(runs)]
     return {
-        "scenario": DEFAULT_SCENARIO,
+        "scenario": scenario_name,
+        "plan_summary": {
+            "agent_count": len(plan),
+            "steps_per_agent": {agent_id: len(steps) for agent_id, steps in plan.items()},
+            "observed_calls_per_run": sum(len(steps) for steps in plan.values()),
+        },
         "runs": {
             "baseline": baseline_runs,
             "agentglue": glue_runs,
@@ -311,37 +352,59 @@ def run_repo_exploration_harness(runs: int, ttl: float) -> Dict[str, Any]:
     }
 
 
-def write_markdown_summary(path: Path, benchmark: Dict[str, Any], concurrent_probe: Dict[str, Any], metadata: Dict[str, Any]) -> None:
-    baseline = benchmark["aggregate"]["baseline"]
-    glue = benchmark["aggregate"]["agentglue"]
+def scenario_takeaway(name: str, baseline: Dict[str, Any], glue: Dict[str, Any]) -> str:
+    saved = glue.get("calls_saved_mean", 0)
+    dedup_rate = glue.get("dedup_rate_mean", 0.0)
+    if name == "repo_exploration":
+        return (
+            f"Clean overlap case: AgentGlue saves {saved:.1f} executions on average "
+            f"({dedup_rate:.1%} dedup rate) on repeated repo search/read/list calls."
+        )
+    return (
+        f"Messier partial-overlap case: AgentGlue still saves {saved:.1f} executions on average "
+        f"({dedup_rate:.1%} dedup rate), but exact-match scope leaves near-miss queries and different line ranges untouched."
+    )
+
+
+def write_markdown_summary(path: Path, scenario_results: Dict[str, Any], concurrent_probe: Dict[str, Any], metadata: Dict[str, Any]) -> None:
     lines = [
         "# AgentGlue Benchmark Summary",
         "",
         f"- label: `{metadata['label']}`",
         f"- target_repo: `{metadata['target_repo']}`",
-        f"- scenario: `{metadata['scenario']}`",
+        f"- scenarios: **{', '.join(metadata['scenarios'])}**",
         f"- runs: **{metadata['runs']}**",
         f"- dedup_ttl_s: **{metadata['dedup_ttl_s']}**",
         "",
-        "## Repo exploration aggregate",
-        "",
-        f"- baseline underlying executions mean: **{baseline['underlying_executions_mean']}**",
-        f"- agentglue underlying executions mean: **{glue['underlying_executions_mean']}**",
-        f"- agentglue calls saved mean: **{glue['calls_saved_mean']}**",
-        f"- agentglue dedup rate mean: **{glue['dedup_rate_mean']}**",
-        f"- baseline wall clock mean: **{baseline['wall_clock_ms_mean']} ms**",
-        f"- agentglue wall clock mean: **{glue['wall_clock_ms_mean']} ms**",
-        "",
-        "## Per-tool mean summary",
+        "## Scenario aggregates",
         "",
     ]
-    for tool_name, stats in glue["per_tool_mean"].items():
-        lines.append(
-            f"- `{tool_name}`: observed={stats['observed_calls']}, underlying={stats['underlying_executions']}, saves={stats['dedup_saves']}, dedup_rate={stats['dedup_rate']}"
-        )
+
+    for scenario_name in metadata["scenarios"]:
+        scenario = scenario_results[scenario_name]
+        baseline = scenario["aggregate"]["baseline"]
+        glue = scenario["aggregate"]["agentglue"]
+        lines.extend([
+            f"### {scenario_name}",
+            "",
+            f"- observed calls / run: **{scenario['plan_summary']['observed_calls_per_run']}**",
+            f"- baseline underlying executions mean: **{baseline['underlying_executions_mean']}**",
+            f"- agentglue underlying executions mean: **{glue['underlying_executions_mean']}**",
+            f"- agentglue calls saved mean: **{glue['calls_saved_mean']}**",
+            f"- agentglue dedup rate mean: **{glue['dedup_rate_mean']}**",
+            f"- baseline wall clock mean: **{baseline['wall_clock_ms_mean']} ms**",
+            f"- agentglue wall clock mean: **{glue['wall_clock_ms_mean']} ms**",
+            f"- takeaway: {scenario_takeaway(scenario_name, baseline, glue)}",
+            "",
+            "Per-tool mean summary:",
+        ])
+        for tool_name, stats in glue["per_tool_mean"].items():
+            lines.append(
+                f"- `{tool_name}`: observed={stats['observed_calls']}, underlying={stats['underlying_executions']}, saves={stats['dedup_saves']}, dedup_rate={stats['dedup_rate']}"
+            )
+        lines.append("")
 
     lines.extend([
-        "",
         "## Concurrent probe",
         "",
         f"- underlying_call_count: **{concurrent_probe['underlying_call_count']}**",
@@ -349,9 +412,9 @@ def write_markdown_summary(path: Path, benchmark: Dict[str, Any], concurrent_pro
         f"- deduped_calls_in_metrics: **{concurrent_probe['summary']['tool_calls_deduped']}**",
         f"- finding: {concurrent_probe['finding']}",
         "",
-        "## Notes",
+        "## Interpretation",
         "",
-        "Single-flight coalescing is now active: concurrent identical calls share the leader's execution result instead of both executing. Combined with TTL-based cache, this covers both sequential and concurrent dedup scenarios.",
+        "AgentGlue is strongest when multiple agents make truly identical calls close together. Sequential exact matches are handled by the TTL cache; concurrent exact matches are handled by single-flight coalescing. Partial-overlap scenarios remain useful because they show the ceiling of exact-match dedup without pretending semantic dedup already exists.",
     ])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -362,34 +425,46 @@ def main() -> None:
     parser.add_argument("--dedup-ttl", type=float, default=600.0)
     parser.add_argument("--label", default="repo_exploration")
     parser.add_argument("--artifact-root", default=str(DEFAULT_ARTIFACT_ROOT))
+    parser.add_argument(
+        "--scenario",
+        dest="scenarios",
+        action="append",
+        choices=sorted(SCENARIO_PLANS),
+        help="Benchmark scenario to run. Repeat to run multiple scenarios. Defaults to all built-in scenarios.",
+    )
     args = parser.parse_args()
 
+    scenarios = args.scenarios or list(DEFAULT_SCENARIOS)
     artifact_dir = Path(args.artifact_root) / args.label
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
     metadata = {
         "label": args.label,
         "target_repo": str(TARGET_REPO),
-        "scenario": DEFAULT_SCENARIO,
+        "scenarios": scenarios,
         "runs": args.runs,
         "dedup_ttl_s": args.dedup_ttl,
         "generated_at_epoch_s": round(time.time(), 3),
     }
 
-    benchmark = run_repo_exploration_harness(runs=args.runs, ttl=args.dedup_ttl)
+    scenario_results = {
+        scenario_name: run_scenario_harness(scenario_name, runs=args.runs, ttl=args.dedup_ttl)
+        for scenario_name in scenarios
+    }
     concurrent_probe = run_concurrent_probe()
     result = {
         "metadata": metadata,
-        "repo_exploration": benchmark,
+        "scenarios": scenario_results,
         "concurrent_probe": concurrent_probe,
     }
 
     result_path = artifact_dir / "result.json"
     result_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
 
-    last_events = benchmark["runs"]["agentglue"][-1]["events"]
-    events_path = artifact_dir / "repo_exploration_last_run.events.jsonl"
-    events_path.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in last_events), encoding="utf-8")
+    for scenario_name in scenarios:
+        last_events = scenario_results[scenario_name]["runs"]["agentglue"][-1]["events"]
+        events_path = artifact_dir / f"{scenario_name}_last_run.events.jsonl"
+        events_path.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in last_events), encoding="utf-8")
 
     concurrent_events_path = artifact_dir / "concurrent_probe.events.jsonl"
     concurrent_events_path.write_text(
@@ -398,15 +473,20 @@ def main() -> None:
     )
 
     summary_path = artifact_dir / "SUMMARY.md"
-    write_markdown_summary(summary_path, benchmark, concurrent_probe, metadata)
+    write_markdown_summary(summary_path, scenario_results, concurrent_probe, metadata)
 
     print(json.dumps({
         "artifact_dir": str(artifact_dir),
         "result_json": str(result_path),
         "summary_md": str(summary_path),
-        "repo_events_jsonl": str(events_path),
+        "scenario_event_logs": {
+            scenario_name: str(artifact_dir / f"{scenario_name}_last_run.events.jsonl") for scenario_name in scenarios
+        },
         "concurrent_events_jsonl": str(concurrent_events_path),
-        "repo_exploration_calls_saved_mean": benchmark["aggregate"]["agentglue"].get("calls_saved_mean"),
+        "scenario_calls_saved_mean": {
+            scenario_name: scenario_results[scenario_name]["aggregate"]["agentglue"].get("calls_saved_mean")
+            for scenario_name in scenarios
+        },
         "concurrent_underlying_call_count": concurrent_probe["underlying_call_count"],
     }, indent=2))
 

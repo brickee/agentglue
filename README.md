@@ -1,6 +1,6 @@
 # AgentGlue
 
-> Runtime middleware for multi-agent systems — starting with exact-match dedup, TTL caching, and baseline observability for shared tool use.
+> Thin runtime layer for shared tool-call coordination in multi-agent systems — exact-match dedup, TTL cache, single-flight, and baseline observability.
 
 ## The problem
 
@@ -18,10 +18,15 @@ That creates a predictable set of problems:
 The first usable pass stays intentionally narrow:
 - exact-match tool-call dedup
 - **in-flight coalescing (single-flight)** — concurrent identical calls share one execution
-- TTL result cache
+- TTL result cache for sequential repeat calls
 - cache invalidation API
 - baseline metrics + event recording
 - simple decorator API
+
+What this means in plain English:
+- if two agents make the **same call at the same time**, single-flight lets one lead and the others wait
+- if another agent makes the **same call shortly after**, the TTL cache serves it
+- if the calls are only *similar* rather than identical, AgentGlue v0.1 does **not** merge them
 
 Shared memory, rate coordination, and task locks are scaffolded in the codebase, but they are **not** the product claim for v0.1.
 
@@ -162,11 +167,15 @@ PYTHONPATH=src python3 scripts/benchmark_repo_exploration.py --runs 3 --label lo
 
 That writes stable JSON/JSONL/Markdown artifacts under `artifacts/benchmarks/<label>/`, including:
 - repeated baseline vs AgentGlue runs
+- **two scenarios**: a clean repo-exploration overlap path and a messier partial-overlap path
 - per-tool summaries
 - recorder-backed duplicate analysis
+- scenario-specific JSONL event exports
 - a concurrent identical-call probe
 
-The concurrent probe now confirms single-flight coalescing: two simultaneous identical calls result in 1 underlying execution and 1 coalesced waiter.
+The concurrent probe confirms single-flight coalescing: two simultaneous identical calls result in 1 underlying execution and 1 coalesced waiter.
+
+The partial-overlap scenario is there on purpose: it shows where exact-match dedup stops helping, so the benchmark story stays honest instead of quietly grading itself on the easiest possible test forever.
 
 ## Design principles
 
@@ -178,6 +187,12 @@ The concurrent probe now confirms single-flight coalescing: two simultaneous ide
 
 ## Development
 
+Run the tiny example:
+
+```bash
+PYTHONPATH=src python3 examples/basic_report.py
+```
+
 Run the smoke tests with:
 
 ```bash
@@ -188,6 +203,12 @@ If you have pytest installed:
 
 ```bash
 PYTHONPATH=src pytest -q
+```
+
+Export benchmark artifacts:
+
+```bash
+PYTHONPATH=src python3 scripts/benchmark_repo_exploration.py --runs 3 --label local_run
 ```
 
 ## Disclaimer

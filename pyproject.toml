@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agentglue"
 version = "0.1.0"
-description = "Runtime middleware for multi-agent systems — dedup, shared memory, rate coordination, and conflict prevention"
+description = "Thin runtime layer for multi-agent systems — exact-match dedup, TTL cache, single-flight, and observability"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "brickee"}]
