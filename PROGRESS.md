@@ -146,6 +146,12 @@
 - Added tests for metrics and hit_rate computation.
 - This makes the optional shared-memory path more honest and measurable without inflating the default product claim.
 
+## 2026-03-11 — archived old AgentGym-era artifacts
+- Moved all AgentGym-targeted benchmark runs to `artifacts/_archived_agentgym_era/` and `artifacts/benchmarks/_archived_agentgym_era/` with README explaining they're historical only.
+- Removed these files from git tracking (they were previously force-added).
+- Current canonical benchmark is `standalone_default_smoke/` which uses the self-contained fixture repo.
+- This ensures the repo no longer carries AgentGym-era artifacts that could confuse users about current dependencies.
+
 ## 2026-03-09 — standalone benchmark default + narrow runtime defaults
 - Flipped `AgentGlue()` defaults to the narrow standalone path:
   - `shared_memory=False`
