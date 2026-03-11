@@ -138,6 +138,14 @@
   - no examples requiring AgentGym
   - no outward-facing messaging that implies AgentGlue still depends on AgentGym
 
+## 2026-03-11 — shared-memory metrics tightened, optional path clarified
+- Added `SharedMemoryMetrics` dataclass with: writes, reads, hits, misses, stale_reads, private_access_denied.
+- Added `hit_rate` property on `SharedMemory`.
+- Added `summary()` method returning current state + metrics.
+- Updated module docstring to clearly state: OPTIONAL / SCAFFOLDED, NOT part of core v0.1.
+- Added tests for metrics and hit_rate computation.
+- This makes the optional shared-memory path more honest and measurable without inflating the default product claim.
+
 ## 2026-03-09 — standalone benchmark default + narrow runtime defaults
 - Flipped `AgentGlue()` defaults to the narrow standalone path:
   - `shared_memory=False`

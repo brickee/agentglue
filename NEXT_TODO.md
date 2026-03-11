@@ -7,7 +7,7 @@
 4. ~~Record repeated baseline vs AgentGlue v0.1 metrics on at least one medium-sized Python repo.~~
 
 ## Next
-5. Tighten shared-memory metrics on the runtime path so optional reads/writes are measurable without inflating the default product claim.
+5. ~~Tighten shared-memory metrics on the runtime path so optional reads/writes are measurable without inflating the default product claim.~~ — **Done.** `SharedMemory` now has honest metrics: writes, reads, hits, misses, stale_reads, private_access_denied, hit_rate. Docs clearly state it's optional/scaffolded.
 6. Decide whether to regenerate benchmark artifacts under a clearly archived / historical directory so old AgentGym-based runs stop looking current.
 7. Add semantic dedup only if exact-match dedup leaves obvious savings on the table.
 8. Add a minimal integration adapter skeleton (likely CrewAI or LangGraph).
