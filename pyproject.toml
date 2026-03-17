@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentglue"
-version = "0.3.1"
+version = "0.3.2"
 description = "Thin runtime layer for multi-agent systems — cross-process dedup, TTL cache, single-flight, SQLite backend, and observability"
 readme = "README.md"
 requires-python = ">=3.10"

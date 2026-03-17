@@ -1,7 +1,7 @@
 {
   "id": "openclaw-agentglue",
   "name": "AgentGlue",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Cross-process dedup cache for multi-agent tool calls via SQLite sidecar",
   "configSchema": {
     "type": "object",
