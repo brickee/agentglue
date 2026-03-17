@@ -1,177 +1,51 @@
 {
   "id": "openclaw-agentglue",
   "name": "AgentGlue",
-  "version": "0.2.0",
-  "description": "AgentGlue middleware integration for OpenClaw with deduplication, rate limiting, and repo exploration tools",
-  "entry": "dist/index.js",
-  "sidecar": {
-    "command": "python3",
-    "args": ["sidecar/server.py"],
-    "cwd": "${pluginDir}",
-    "port": 8765
-  },
-  "config": {
-    "schema": {
-      "type": "object",
-      "properties": {
-        "host": {
-          "type": "string",
-          "default": "127.0.0.1",
-          "description": "Sidecar host address"
-        },
-        "port": {
-          "type": "integer",
-          "default": 8765,
-          "description": "Sidecar port"
-        },
-        "autoStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "Auto-start sidecar on plugin load"
-        },
-        "maxRestarts": {
-          "type": "integer",
-          "default": 3,
-          "description": "Maximum sidecar restart attempts"
-        },
-        "restartDelayMs": {
-          "type": "integer",
-          "default": 2000,
-          "description": "Delay between restart attempts (ms)"
-        },
-        "healthCheckIntervalMs": {
-          "type": "integer",
-          "default": 30000,
-          "description": "Health check interval (ms)"
-        },
-        "rateLimits": {
-          "type": "object",
-          "default": {
-            "search": 10,
-            "read_file": 20,
-            "list_files": 15
-          },
-          "description": "Rate limits per tool (calls per second)"
-        },
-        "dedupTTL": {
-          "type": "number",
-          "default": 300,
-          "description": "Deduplication TTL in seconds"
-        },
-        "sharedMemoryTTL": {
-          "type": "number",
-          "default": 600,
-          "description": "Shared memory TTL in seconds"
-        }
+  "version": "0.3.0",
+  "description": "Cross-process dedup cache for multi-agent tool calls via SQLite sidecar",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "host": {
+        "type": "string",
+        "default": "127.0.0.1",
+        "description": "Sidecar host address"
+      },
+      "port": {
+        "type": "integer",
+        "default": 8765,
+        "description": "Sidecar port"
+      },
+      "autoStart": {
+        "type": "boolean",
+        "default": true,
+        "description": "Auto-start sidecar on plugin load"
+      },
+      "maxRestarts": {
+        "type": "integer",
+        "default": 3,
+        "description": "Maximum sidecar restart attempts"
+      },
+      "restartDelayMs": {
+        "type": "integer",
+        "default": 2000,
+        "description": "Delay between restart attempts (ms)"
+      },
+      "healthCheckIntervalMs": {
+        "type": "integer",
+        "default": 30000,
+        "description": "Health check interval (ms)"
+      },
+      "cacheTTL": {
+        "type": "number",
+        "default": 300,
+        "description": "Default cache TTL in seconds for auto-cached tool results"
+      },
+      "dbPath": {
+        "type": "string",
+        "default": "",
+        "description": "SQLite database path (default: ~/.openclaw/cache/agentglue.db)"
       }
     }
-  },
-  "tools": [
-    {
-      "name": "agentglue_search",
-      "description": "Search using AgentGlue-wrapped tool with deduplication and metrics",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Search query"
-          }
-        },
-        "required": ["query"]
-      }
-    },
-    {
-      "name": "agentglue_metrics",
-      "description": "Get AgentGlue runtime metrics report",
-      "parameters": {
-        "type": "object",
-        "properties": {}
-      }
-    },
-    {
-      "name": "deduped_search",
-      "description": "Search for files in a repository with deduplication - use for finding code patterns, functions, or files",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "repo_path": {
-            "type": "string",
-            "description": "Absolute path to the repository root"
-          },
-          "pattern": {
-            "type": "string",
-            "description": "Search pattern (grep-compatible regex)"
-          },
-          "file_pattern": {
-            "type": "string",
-            "description": "Optional file glob pattern (e.g., '*.py', '*.ts')",
-            "default": "*"
-          },
-          "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return",
-            "default": 50
-          }
-        },
-        "required": ["repo_path", "pattern"]
-      }
-    },
-    {
-      "name": "deduped_read_file",
-      "description": "Read file contents with deduplication and caching - use for examining code files",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "Absolute path to the file"
-          },
-          "offset": {
-            "type": "integer",
-            "description": "Line number to start reading from (1-indexed)",
-            "default": 1
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum number of lines to read",
-            "default": 200
-          }
-        },
-        "required": ["file_path"]
-      }
-    },
-    {
-      "name": "deduped_list_files",
-      "description": "List files in a directory with deduplication - use for exploring repository structure",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "dir_path": {
-            "type": "string",
-            "description": "Absolute path to the directory"
-          },
-          "recursive": {
-            "type": "boolean",
-            "description": "Whether to list recursively",
-            "default": false
-          },
-          "include_hidden": {
-            "type": "boolean",
-            "description": "Include hidden files (starting with .)",
-            "default": false
-          }
-        },
-        "required": ["dir_path"]
-      }
-    },
-    {
-      "name": "agentglue_health",
-      "description": "Get plugin and sidecar health status",
-      "parameters": {
-        "type": "object",
-        "properties": {}
-      }
-    }
-  ]
+  }
 }

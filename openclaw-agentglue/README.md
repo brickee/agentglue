@@ -1,57 +1,56 @@
 # OpenClaw AgentGlue Plugin
 
-> Production-ready OpenClaw plugin that wraps AgentGlue middleware for intelligent tool coordination
+> OpenClaw plugin for cross-process, cross-agent deduplicated caching via a lightweight Python sidecar backed by SQLite.
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](../AgentGlue)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://www.npmjs.com/package/openclaw-agentglue)
+
+## What changed in v0.3
+
+v0.3 turns the plugin into a self-contained npm package:
+- Bundles the AgentGlue Python library inside the package
+- Uses a SQLite-backed sidecar for cross-process cache sharing
+- Auto-caches tool results after read-only calls
+- Exposes cache-aware OpenClaw tools for repo exploration and file reads
+
+No separate parent-project checkout is required at runtime.
 
 ## Features
 
-- **🔧 Auto-managed Sidecar** - Python sidecar starts automatically, with health monitoring and crash recovery
-- **🛡️ Deduplication** - Exact-match tool call deduplication prevents duplicate work
-- **⏱️ Rate Limiting** - Per-tool rate limits protect external services
-- **📁 Repo Exploration Tools** - Purpose-built tools for code repository analysis:
-  - `deduped_search` - Search code patterns across repositories
-  - `deduped_read_file` - Read files with pagination and caching
-  - `deduped_list_files` - Explore directory structures
-- **📊 Metrics & Observability** - Built-in metrics and health monitoring
-- **🔄 Single-Flight** - Concurrent identical calls share one execution
+- **SQLite-backed cross-agent cache** - cache survives across processes and agent sessions
+- **Auto-managed sidecar** - starts automatically, includes health checks and restart handling
+- **Exact-match dedup** - identical tool calls collapse to a shared cached result
+- **Cache-aware repo tools** - read/search/list helpers for code exploration
+- **Metrics + health endpoints** - inspect cache behavior and runtime status
+- **Self-contained package** - bundled Python library, no extra AgentGlue install needed
 
-## Installation
+## Install
+
+Preferred:
 
 ```bash
-# Copy plugin to OpenClaw plugins directory
-cp -r openclaw-agentglue ~/.openclaw/plugins/
+npm install -g openclaw-agentglue
+# or
+openclaw plugins install openclaw-agentglue
+```
 
-# Or symlink for development
-ln -s $(pwd)/openclaw-agentglue ~/.openclaw/plugins/openclaw-agentglue
+For local development:
+
+```bash
+cd openclaw-agentglue
+npm install
+npm run build
+npm run verify
 ```
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js >= 18
 - Python 3.10+
-- AgentGlue (parent project)
+- OpenClaw with plugin support
 
-## Quick Start
+## OpenClaw configuration
 
-1. **Install dependencies:**
-   ```bash
-   cd openclaw-agentglue
-   npm install
-   npm run build
-   ```
-
-2. **Verify installation:**
-   ```bash
-   npm run verify
-   ```
-
-3. **Enable in OpenClaw:**
-   The plugin auto-registers if placed in `~/.openclaw/plugins/`
-
-## Configuration
-
-Add to your OpenClaw config (`~/.openclaw/config.json`):
+Add this to your OpenClaw config:
 
 ```json
 {
@@ -63,177 +62,122 @@ Add to your OpenClaw config (`~/.openclaw/config.json`):
       "maxRestarts": 3,
       "restartDelayMs": 2000,
       "healthCheckIntervalMs": 30000,
-      "rateLimits": {
-        "search": 10,
-        "read_file": 20,
-        "list_files": 15
-      },
-      "dedupTTL": 300,
-      "sharedMemoryTTL": 600
+      "cacheTTL": 300,
+      "dbPath": ""
     }
   }
 }
 ```
 
-### Configuration Options
+### Config options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `host` | string | `127.0.0.1` | Sidecar host address |
+|---|---|---:|---|
+| `host` | string | `127.0.0.1` | Sidecar host to bind/connect to |
 | `port` | integer | `8765` | Sidecar port |
-| `autoStart` | boolean | `true` | Auto-start sidecar on plugin load |
-| `maxRestarts` | integer | `3` | Maximum sidecar restart attempts |
-| `restartDelayMs` | integer | `2000` | Delay between restarts (ms) |
-| `healthCheckIntervalMs` | integer | `30000` | Health check interval (ms) |
-| `rateLimits` | object | `{search: 10, read_file: 20, list_files: 15}` | Per-tool rate limits (calls/sec) |
-| `dedupTTL` | number | `300` | Deduplication cache TTL (seconds) |
-| `sharedMemoryTTL` | number | `600` | Shared memory TTL (seconds) |
+| `autoStart` | boolean | `true` | Start sidecar automatically on gateway startup |
+| `maxRestarts` | integer | `3` | Max automatic restart attempts |
+| `restartDelayMs` | integer | `2000` | Delay between restart attempts |
+| `healthCheckIntervalMs` | integer | `30000` | Sidecar health probe interval |
+| `cacheTTL` | number | `300` | TTL in seconds for auto-cached tool results |
+| `dbPath` | string | `""` | Optional SQLite DB path; empty uses `~/.openclaw/cache/agentglue.db` |
 
-## Available Tools
+## Exposed OpenClaw tools
 
-### `agentglue_search`
-Basic search with deduplication and metrics.
+These are the tools OpenClaw users/agents actually call:
+
+### `agentglue_cached_read`
+Read a file with cross-agent cache lookup first.
 
 ```json
 {
-  "query": "machine learning frameworks"
+  "file_path": "/abs/path/to/file.py",
+  "offset": 1,
+  "limit": 200
 }
 ```
 
-### `agentglue_metrics`
-Get runtime metrics report.
-
-```json
-{}
-```
-
-### `deduped_search`
-Search for files in a repository with deduplication.
+### `agentglue_cached_search`
+Search a repository with cache lookup first.
 
 ```json
 {
-  "repo_path": "/path/to/repo",
+  "repo_path": "/abs/path/to/repo",
   "pattern": "def.*train",
   "file_pattern": "*.py",
   "max_results": 50
 }
 ```
 
-**Parameters:**
-- `repo_path` (required): Absolute path to repository root
-- `pattern` (required): grep-compatible regex pattern
-- `file_pattern`: Optional file glob (default: `*`)
-- `max_results`: Maximum results to return (default: 50)
-
-### `deduped_read_file`
-Read file contents with deduplication and caching.
+### `agentglue_cached_list`
+List files in a directory with cache lookup first.
 
 ```json
 {
-  "file_path": "/path/to/file.py",
-  "offset": 1,
-  "limit": 200
-}
-```
-
-**Parameters:**
-- `file_path` (required): Absolute path to file
-- `offset`: Line number to start from (1-indexed, default: 1)
-- `limit`: Max lines to read (default: 200)
-
-### `deduped_list_files`
-List files in a directory with deduplication.
-
-```json
-{
-  "dir_path": "/path/to/dir",
+  "dir_path": "/abs/path/to/dir",
   "recursive": true,
   "include_hidden": false
 }
 ```
 
-**Parameters:**
-- `dir_path` (required): Absolute path to directory
-- `recursive`: List recursively (default: false)
-- `include_hidden`: Include hidden files (default: false)
-
-### `agentglue_health`
-Get plugin and sidecar health status.
+### `agentglue_metrics`
+Return cache and middleware metrics.
 
 ```json
 {}
 ```
 
+### `agentglue_health`
+Return sidecar health and runtime config summary.
+
+```json
+{}
+```
+
+## Internal sidecar tools
+
+The Python sidecar also defines internal tools (`deduped_read_file`, `deduped_search`, `deduped_list_files`) which back the public `agentglue_cached_*` tools. In normal OpenClaw usage, call the `agentglue_cached_*` names.
+
 ## Architecture
 
+```text
+OpenClaw gateway
+  └─ AgentGlue plugin (TypeScript)
+      ├─ after_tool_call hook stores cached results
+      ├─ registers agentglue_cached_* tools
+      └─ manages Python sidecar lifecycle
+             └─ SQLite-backed AgentGlue runtime
 ```
-┌─────────────────┐     HTTP/JSON      ┌──────────────────┐
-│  OpenClaw Core  │ ◄────────────────► │  AgentGlue       │
-│                 │    Port 8765       │  Python Sidecar  │
-└─────────────────┘                     └──────────────────┘
-                                               │
-                                               │ wraps with
-                                               ▼
-                                        ┌──────────────────┐
-                                        │  AgentGlue       │
-                                        │  Middleware      │
-                                        │  - Dedup         │
-                                        │  - Rate Limit    │
-                                        │  - Metrics       │
-                                        └──────────────────┘
+
+## Verify before release
+
+```bash
+npm run build
+npm run verify
+npm pack --dry-run
 ```
 
 ## Troubleshooting
 
-### Sidecar won't start
+### Sidecar does not start
 ```bash
-# Check Python availability
 python3 --version
-
-# Check AgentGlue is in Python path
-cd /path/to/AgentGlue
-python3 -c "from agentglue import AgentGlue; print('OK')"
-
-# Manual sidecar test
-python3 sidecar/server.py --port 8765
+python3 sidecar/server.py --host 127.0.0.1 --port 8765
 ```
 
-### Port already in use
+### Port conflict
 ```bash
-# Find process using port
 lsof -i :8765
-
-# Kill it or change port in config
 ```
 
-### Health check failures
-- Check sidecar logs in console output
-- Verify `autoStart: true` in config
-- Ensure firewall allows localhost connections
-
-### Build errors
+### Clean rebuild
 ```bash
-# Clean and rebuild
-rm -rf dist node_modules
+rm -rf dist node_modules python
 npm install
 npm run build
+npm run verify
 ```
-
-## Development
-
-```bash
-# Watch mode for development
-npm run dev
-
-# Run sidecar manually for testing
-python3 sidecar/server.py --port 8765
-```
-
-## Cross-Platform Notes
-
-- **Linux/macOS**: Full support
-- **Windows**: WSL recommended; native support requires PowerShell adjustments
 
 ## License
 
-MIT - See parent AgentGlue project
+MIT

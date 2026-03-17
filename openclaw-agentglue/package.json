@@ -1,22 +1,24 @@
 {
   "name": "openclaw-agentglue",
-  "version": "0.2.0",
-  "description": "OpenClaw plugin for AgentGlue middleware integration with repo exploration tools",
+  "version": "0.3.0",
+  "description": "OpenClaw plugin — cross-process dedup cache for multi-agent tool calls via SQLite sidecar",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/",
     "sidecar/",
+    "python/",
     "openclaw.plugin.json",
     "README.md"
   ],
   "scripts": {
     "build": "tsc",
+    "bundle-python": "rm -rf python && mkdir -p python && cp -r ../src/agentglue python/agentglue && find python -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; echo 'Python lib bundled'",
     "dev": "tsc --watch",
     "verify": "node -e \"console.log('Plugin structure OK'); require('./dist/index.js')\"",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run bundle-python && npm run build"
   },
-  "keywords": ["openclaw", "plugin", "agentglue", "deduplication", "repo-exploration"],
+  "keywords": ["openclaw", "plugin", "agentglue", "deduplication", "cache", "sqlite", "multi-agent"],
   "author": "Patrick",
   "license": "MIT",
   "repository": {
@@ -31,5 +33,8 @@
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "openclaw": {
+    "extensions": ["./dist/index.js"]
+  }
 }
