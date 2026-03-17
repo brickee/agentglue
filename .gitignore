@@ -8,3 +8,13 @@ build/
 .local-pydeps/
 artifacts/
 .venv/
+
+# Local-only project notes / planning
+AGENTS.md
+BENCHMARK_PLAN.md
+GO_TO_MARKET.md
+MORNING_MEMO_*.md
+NEXT_TODO.md
+PLAN.md
+PROGRESS.md
+TEST_RESULT_*.md

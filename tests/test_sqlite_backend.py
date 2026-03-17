@@ -1,10 +1,8 @@
 """Tests for SQLite-backed dedup cache (v0.3)."""
 
-import json
 import os
 import subprocess
 import sys
-import tempfile
 import time
 
 import pytest

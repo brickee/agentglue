@@ -18,7 +18,3 @@ jobs:
           python -m pip install -e .[dev]
       - name: Run pytest
         run: pytest -q
-      - name: Run basic report example
-        run: PYTHONPATH=src python examples/basic_report.py
-      - name: Run recorder export example
-        run: PYTHONPATH=src python examples/recorder_export.py

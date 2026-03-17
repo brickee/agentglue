@@ -1,45 +1,72 @@
-<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0B1220"/>
-      <stop offset="1" stop-color="#111827"/>
+    <linearGradient id="bg" x1="120" y1="60" x2="1480" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#EEF4FF"/>
     </linearGradient>
-    <linearGradient id="accent" x1="180" y1="120" x2="1040" y2="520" gradientUnits="userSpaceOnUse">
+    <linearGradient id="card" x1="140" y1="110" x2="1450" y2="790" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7FAFF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="240" y1="180" x2="1360" y2="720" gradientUnits="userSpaceOnUse">
       <stop stop-color="#22D3EE"/>
-      <stop offset="0.5" stop-color="#60A5FA"/>
+      <stop offset="0.45" stop-color="#60A5FA"/>
       <stop offset="1" stop-color="#A78BFA"/>
     </linearGradient>
-    <filter id="blur" x="0" y="0" width="1280" height="640" filterUnits="userSpaceOnUse">
-      <feGaussianBlur stdDeviation="80"/>
+    <filter id="softBlur" x="0" y="0" width="1600" height="900" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="85"/>
+    </filter>
+    <filter id="shadow" x="60" y="70" width="1480" height="780" filterUnits="userSpaceOnUse">
+      <feOffset dy="16"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.215 0 0 0 0 0.322 0 0 0 0 0.584 0 0 0 0.14 0"/>
+      <feBlend in2="SourceGraphic" result="shape"/>
     </filter>
   </defs>
 
-  <rect width="1280" height="640" rx="32" fill="url(#bg)"/>
-  <g opacity="0.35" filter="url(#blur)">
-    <circle cx="260" cy="160" r="120" fill="#22D3EE"/>
-    <circle cx="1020" cy="180" r="140" fill="#8B5CF6"/>
-    <circle cx="860" cy="520" r="120" fill="#3B82F6"/>
+  <rect width="1600" height="900" rx="36" fill="url(#bg)"/>
+
+  <g opacity="0.45" filter="url(#softBlur)">
+    <circle cx="270" cy="150" r="170" fill="#BAE6FD"/>
+    <circle cx="1290" cy="210" r="180" fill="#DDD6FE"/>
+    <circle cx="1140" cy="720" r="170" fill="#BFDBFE"/>
   </g>
 
-  <rect x="78" y="86" width="1124" height="468" rx="28" fill="#0F172A" stroke="#334155"/>
+  <g filter="url(#shadow)">
+    <rect x="88" y="92" width="1424" height="716" rx="34" fill="url(#card)"/>
+    <rect x="88.75" y="92.75" width="1422.5" height="714.5" rx="33.25" stroke="#D7E3F8" stroke-width="1.5"/>
+  </g>
 
-  <text x="116" y="188" fill="#E5E7EB" font-family="Inter, Arial, sans-serif" font-size="82" font-weight="700">AgentGlue</text>
-  <text x="118" y="244" fill="#93C5FD" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">A runtime layer for multi-agent tool coordination</text>
-  <text x="118" y="296" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="26">Deduplicate identical tool calls. Share cache across agents. Keep the system honest.</text>
+  <text x="142" y="220" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="110" font-weight="800">AgentGlue</text>
+  <text x="144" y="286" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Middleware orchestration for multi-agent systems</text>
+  <text x="144" y="346" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="30">Coordinate overlapping work, share exact results, and turn multi-agent collaboration into a clean runtime primitive.</text>
 
-  <rect x="118" y="350" width="300" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
-  <text x="146" y="394" fill="#67E8F9" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">100-test benchmark suite</text>
-  <text x="146" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">3.7× speedup</text>
+  <g opacity="0.98">
+    <rect x="144" y="420" width="352" height="122" rx="22" fill="#F8FBFF" stroke="#D8E7FF"/>
+    <text x="176" y="468" fill="#0284C7" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Benchmark suite</text>
+    <text x="176" y="516" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800">3.7× speedup</text>
 
-  <rect x="448" y="350" width="290" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
-  <text x="476" y="394" fill="#A5B4FC" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Cross-process cache</text>
-  <text x="476" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">SQLite sidecar</text>
+    <rect x="528" y="420" width="380" height="122" rx="22" fill="#F8FBFF" stroke="#D8E7FF"/>
+    <text x="560" y="468" fill="#7C3AED" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Cross-process coordination</text>
+    <text x="560" y="516" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">SQLite sidecar</text>
 
-  <rect x="768" y="350" width="392" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
-  <text x="796" y="394" fill="#93C5FD" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">OpenClaw integration</text>
-  <text x="796" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">npm install + plugin</text>
+    <rect x="940" y="420" width="428" height="122" rx="22" fill="#F8FBFF" stroke="#D8E7FF"/>
+    <text x="972" y="468" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Framework stance</text>
+    <text x="972" y="516" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">below orchestration, above tools</text>
+  </g>
 
-  <path d="M815 182C860 144 913 132 976 144C1038 156 1096 187 1142 238" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="806" cy="190" r="10" fill="#22D3EE"/>
-  <circle cx="1148" cy="242" r="10" fill="#A78BFA"/>
+  <g>
+    <circle cx="1130" cy="236" r="18" fill="#22D3EE"/>
+    <circle cx="1266" cy="312" r="18" fill="#60A5FA"/>
+    <circle cx="1390" cy="246" r="18" fill="#A78BFA"/>
+    <circle cx="1238" cy="412" r="18" fill="#22D3EE"/>
+    <circle cx="1376" cy="390" r="18" fill="#60A5FA"/>
+
+    <path d="M1130 236L1266 312L1390 246L1376 390L1238 412L1130 236Z" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1266 312L1238 412" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M1266 312L1376 390" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <text x="144" y="646" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="24">Exact-match dedup • single-flight • TTL cache • metrics • OpenClaw plugin</text>
+  <text x="144" y="702" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Build multi-agent systems that coordinate instead of collide.</text>
 </svg>
