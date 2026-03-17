@@ -1,0 +1,45 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="180" y1="120" x2="1040" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="0.5" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1280" height="640" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" rx="32" fill="url(#bg)"/>
+  <g opacity="0.35" filter="url(#blur)">
+    <circle cx="260" cy="160" r="120" fill="#22D3EE"/>
+    <circle cx="1020" cy="180" r="140" fill="#8B5CF6"/>
+    <circle cx="860" cy="520" r="120" fill="#3B82F6"/>
+  </g>
+
+  <rect x="78" y="86" width="1124" height="468" rx="28" fill="#0F172A" stroke="#334155"/>
+
+  <text x="116" y="188" fill="#E5E7EB" font-family="Inter, Arial, sans-serif" font-size="82" font-weight="700">AgentGlue</text>
+  <text x="118" y="244" fill="#93C5FD" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">A runtime layer for multi-agent tool coordination</text>
+  <text x="118" y="296" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="26">Deduplicate identical tool calls. Share cache across agents. Keep the system honest.</text>
+
+  <rect x="118" y="350" width="300" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
+  <text x="146" y="394" fill="#67E8F9" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">100-test benchmark suite</text>
+  <text x="146" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">3.7× speedup</text>
+
+  <rect x="448" y="350" width="290" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
+  <text x="476" y="394" fill="#A5B4FC" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Cross-process cache</text>
+  <text x="476" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">SQLite sidecar</text>
+
+  <rect x="768" y="350" width="392" height="108" rx="18" fill="#111827" stroke="#1F2937"/>
+  <text x="796" y="394" fill="#93C5FD" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">OpenClaw integration</text>
+  <text x="796" y="435" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">npm install + plugin</text>
+
+  <path d="M815 182C860 144 913 132 976 144C1038 156 1096 187 1142 238" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="806" cy="190" r="10" fill="#22D3EE"/>
+  <circle cx="1148" cy="242" r="10" fill="#A78BFA"/>
+</svg>
