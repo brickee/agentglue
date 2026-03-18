@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "version": "1.0",
+    "target_repo": "AgentGlue",
+    "target_path": "/home/ubuntu/.openclaw/workspace/projects/AgentGlue",
+    "description": "End-to-end multi-agent benchmark tasks for AgentGlue plugin evaluation"
+  },
+  "tasks": [
+    {
+      "id": "T01_code_review_dedup",
+      "name": "Code review — dedup middleware",
+      "category": "code-review",
+      "description": "3 sub-agents review the same dedup.py file for bugs, style, and performance",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a senior engineer. Spawn exactly 3 sub-agents in parallel to review the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py:\n- Agent 1: Review for correctness bugs and race conditions\n- Agent 2: Review for code style and readability\n- Agent 3: Review for performance and optimization opportunities\n\nEach agent MUST read the full file before reviewing. After all 3 complete, summarize their findings.",
+      "overlap_tools": ["read"],
+      "notes": "All 3 agents read dedup.py — with AgentGlue, agents 2 and 3 should get cache hits on the read"
+    },
+    {
+      "id": "T02_bug_hunt_middleware",
+      "name": "Bug hunt — middleware layer",
+      "category": "bug-hunt",
+      "description": "4 sub-agents search the middleware layer for different bug categories",
+      "num_agents": 4,
+      "expected_overlap": "high",
+      "prompt": "You are a QA lead. Spawn exactly 4 sub-agents in parallel to hunt for bugs in the AgentGlue middleware layer at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/:\n- Agent 1: Search for thread-safety issues and race conditions\n- Agent 2: Search for memory leaks and resource handling bugs\n- Agent 3: Search for error handling gaps (missing try/except, unchecked returns)\n- Agent 4: Search for edge cases in TTL and cache expiry logic\n\nEach agent should read ALL files in the middleware directory and grep for relevant patterns. Summarize all findings.",
+      "overlap_tools": ["read", "grep", "glob"],
+      "notes": "All 4 agents need to read dedup.py, shared_memory.py, task_lock.py — heavy read overlap"
+    },
+    {
+      "id": "T03_api_documentation",
+      "name": "Document public APIs",
+      "category": "documentation",
+      "description": "3 sub-agents document different parts of the same codebase",
+      "num_agents": 3,
+      "expected_overlap": "medium",
+      "prompt": "You are a documentation writer. Spawn exactly 3 sub-agents in parallel to document the AgentGlue Python library at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/:\n- Agent 1: Document the core module (core/ directory) — all classes, methods, parameters\n- Agent 2: Document the middleware module (middleware/ directory) — all classes, methods, parameters\n- Agent 3: Document the main runtime (runtime.py and __init__.py) — public API, constructor args, decorators\n\nEach agent must read all relevant files. DO NOT write any files — just output the documentation as text. Combine all outputs into a unified API reference.",
+      "overlap_tools": ["read", "glob"],
+      "notes": "Agents read different dirs but all need __init__.py and runtime.py; agent 2+3 overlap on runtime.py"
+    },
+    {
+      "id": "T04_security_audit",
+      "name": "Security audit — full repo",
+      "category": "security",
+      "description": "3 sub-agents audit different attack surfaces across the full repo",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a security auditor. Spawn exactly 3 sub-agents in parallel to audit the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for security issues:\n- Agent 1: Audit the Python sidecar server (openclaw-agentglue/sidecar/server.py) for injection, auth bypass, and input validation issues\n- Agent 2: Audit the SQLite cache layer (src/agentglue/middleware/dedup.py) for SQL injection, path traversal, and data integrity issues\n- Agent 3: Audit the TypeScript plugin (openclaw-agentglue/src/index.ts) for command injection, SSRF, and insecure defaults\n\nEach agent should also search for hardcoded secrets, unsafe eval/exec usage, and directory traversal patterns across the entire repo. Summarize all findings with severity ratings.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All agents need to grep the full repo for patterns like eval/exec/secret — search overlap"
+    },
+    {
+      "id": "T05_test_gap_analysis",
+      "name": "Test coverage gap analysis",
+      "category": "testing",
+      "description": "3 sub-agents analyze test coverage from different angles",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a test engineer. Spawn exactly 3 sub-agents in parallel to analyze test coverage gaps in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read all source files in src/agentglue/ and list every public method. Then read all test files in tests/ and identify which methods have no test coverage.\n- Agent 2: Read the sidecar server (openclaw-agentglue/sidecar/server.py) and identify all HTTP endpoints. Then read tests/ to check which endpoints are tested.\n- Agent 3: Read the TypeScript plugin (openclaw-agentglue/src/index.ts) and identify all tool registrations and hooks. Check if there are any TypeScript tests.\n\nEach agent must read both source and test files. Report uncovered areas.",
+      "overlap_tools": ["read", "glob", "grep"],
+      "notes": "All 3 agents read tests/ directory — high overlap on test files"
+    },
+    {
+      "id": "T06_dependency_analysis",
+      "name": "Dependency and compatibility check",
+      "category": "analysis",
+      "description": "2 sub-agents check Python and Node dependencies",
+      "num_agents": 2,
+      "expected_overlap": "medium",
+      "prompt": "You are a DevOps engineer. Spawn exactly 2 sub-agents in parallel to analyze dependencies for the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read pyproject.toml, all Python source files, and identify all stdlib vs third-party imports. Check if any imports would fail without pip install.\n- Agent 2: Read openclaw-agentglue/package.json, openclaw-agentglue/tsconfig.json, and the TypeScript source. List all Node dependencies and check for version conflicts or missing packages.\n\nBoth agents should also read README.md to verify the documented install instructions match actual requirements.",
+      "overlap_tools": ["read"],
+      "notes": "Both agents read README.md and config files — moderate overlap"
+    },
+    {
+      "id": "T07_architecture_review",
+      "name": "Architecture review — cross-cutting",
+      "category": "architecture",
+      "description": "4 sub-agents evaluate architecture from different perspectives",
+      "num_agents": 4,
+      "expected_overlap": "very-high",
+      "prompt": "You are a software architect. Spawn exactly 4 sub-agents in parallel to evaluate the AgentGlue architecture at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Evaluate the Python runtime architecture (src/agentglue/) — modularity, separation of concerns, extensibility\n- Agent 2: Evaluate the sidecar architecture (openclaw-agentglue/sidecar/) — HTTP API design, error handling, scalability\n- Agent 3: Evaluate the plugin architecture (openclaw-agentglue/src/) — hook design, tool registration, lifecycle management\n- Agent 4: Evaluate the overall system architecture — how Python core, sidecar, and TypeScript plugin fit together\n\nEach agent MUST read ALL key files (runtime.py, dedup.py, server.py, index.ts) to understand the full picture before focusing on their area. Produce a unified architecture assessment.",
+      "overlap_tools": ["read", "glob"],
+      "notes": "Agent 4 reads everything, agents 1-3 also need cross-module context — very high read overlap"
+    },
+    {
+      "id": "T08_refactor_plan",
+      "name": "Parallel refactoring proposals",
+      "category": "refactoring",
+      "description": "3 sub-agents propose refactoring for different modules",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a tech lead planning a refactoring sprint. Spawn exactly 3 sub-agents in parallel to propose refactoring plans for the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Propose how to refactor the dedup middleware (src/agentglue/middleware/dedup.py) to support pluggable backends (Redis, memcached) beyond SQLite\n- Agent 2: Propose how to refactor the sidecar (openclaw-agentglue/sidecar/server.py) to use async/await properly and support WebSocket connections\n- Agent 3: Propose how to refactor the TypeScript plugin (openclaw-agentglue/src/index.ts) to support multiple concurrent sidecars and connection pooling\n\nEach agent must read the target file AND related files (the other modules) to understand integration points. DO NOT write code — just produce detailed proposals.",
+      "overlap_tools": ["read"],
+      "notes": "All agents need to read all 3 key files to understand integration points"
+    },
+    {
+      "id": "T09_performance_profiling",
+      "name": "Performance bottleneck analysis",
+      "category": "performance",
+      "description": "3 sub-agents profile different performance dimensions",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a performance engineer. Spawn exactly 3 sub-agents in parallel to analyze performance bottlenecks in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Analyze the SQLite cache layer (src/agentglue/middleware/dedup.py) — identify locking contention, slow queries, missing indices\n- Agent 2: Analyze the HTTP sidecar (openclaw-agentglue/sidecar/server.py) — identify request handling bottlenecks, serialization overhead, connection limits\n- Agent 3: Analyze the TypeScript HTTP client (openclaw-agentglue/src/index.ts) — identify timeout issues, connection reuse, error retry overhead\n\nEach agent should also search for anti-patterns: busy waits, synchronous I/O in async paths, unbounded buffers. Search the full repo with grep.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All agents grep the full repo for anti-patterns — search overlap"
+    },
+    {
+      "id": "T10_onboarding_guide",
+      "name": "New contributor onboarding — parallel exploration",
+      "category": "exploration",
+      "description": "5 sub-agents explore the repo from scratch like new contributors",
+      "num_agents": 5,
+      "expected_overlap": "very-high",
+      "prompt": "You are onboarding 5 new contributors. Spawn exactly 5 sub-agents in parallel, each simulating a new developer exploring the AgentGlue repo at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for the first time:\n- Agent 1: Read README.md, then explore the Python source structure and explain how the runtime works\n- Agent 2: Read README.md, then explore the sidecar and explain the HTTP API\n- Agent 3: Read README.md, then explore the TypeScript plugin and explain the hook system\n- Agent 4: Read README.md, then explore the test suite and explain how to run and write tests\n- Agent 5: Read README.md, then explore the build/packaging system (pyproject.toml, package.json, tsconfig.json)\n\nEach agent should produce a brief onboarding document for their area.",
+      "overlap_tools": ["read", "glob"],
+      "notes": "All 5 agents start by reading README.md — maximum initial read overlap. Then branch into different areas with some secondary overlap."
+    },
+    {
+      "id": "T11_python_ts_consistency",
+      "name": "Compare Python and TypeScript implementations for consistency",
+      "category": "comparison",
+      "description": "3 sub-agents cross-check that Python and TypeScript sides agree on protocols, naming, and behavior",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a senior engineer ensuring cross-language consistency. Spawn exactly 3 sub-agents in parallel to compare the Python and TypeScript implementations in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Compare the HTTP endpoint paths, request/response schemas, and status codes. Report any mismatches between what the server exposes and what the client expects.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Compare event names, payload shapes, and lifecycle hook names. Report any naming or structural inconsistencies.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Compare the cache key generation logic, TTL defaults, and hash algorithms used on both sides. Report any divergences.\n\nEach agent MUST read all files listed for their task. Produce a unified consistency report.",
+      "overlap_tools": ["read"],
+      "notes": "All 3 agents read index.ts and server.py — high overlap on these two cross-language bridge files"
+    },
+    {
+      "id": "T12_error_message_audit",
+      "name": "Error message audit across all modules",
+      "category": "analysis",
+      "description": "3 sub-agents audit error messages for quality, consistency, and actionability",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a UX-focused engineer auditing error messages. Spawn exactly 3 sub-agents in parallel to review error messages across the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ for raise statements, logging.error calls, and warning messages. Read each file containing matches. Assess whether messages are actionable, include context (e.g., variable values), and follow a consistent format.\n- Agent 2: Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py for HTTP error responses, exception handlers, and log messages. Read the full file. Check that error responses include meaningful status codes and body messages.\n- Agent 3: Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts for throw statements, console.error calls, and catch blocks. Read the full file. Check whether TypeScript errors are properly typed and include stack traces where appropriate.\n\nAll agents should also grep the full repo for bare 'except:' or 'catch {}' blocks that swallow errors silently. Produce a unified error quality report.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All 3 agents grep the full repo for bare except/catch — search overlap on the repo-wide scan"
+    },
+    {
+      "id": "T13_logging_observability",
+      "name": "Logging and observability review",
+      "category": "analysis",
+      "description": "3 sub-agents evaluate logging and observability practices",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are an SRE evaluating observability. Spawn exactly 3 sub-agents in parallel to review logging and observability in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py. Assess the metrics collection system: what is tracked, what is missing, are there histogram/counter/gauge patterns. Then grep all Python files for 'metrics' and 'recorder' usage to see adoption across the codebase.\n- Agent 2: Read all middleware files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Evaluate log levels, structured logging usage, and whether critical operations (cache hits, lock acquisitions, dedup decisions) are logged with sufficient detail.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Check request/response logging, correlation IDs, and whether the sidecar and plugin produce logs that can be correlated with the Python core.\n\nProduce a unified observability assessment with recommendations.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "Agent 1 greps all Python files which overlaps with Agent 2 reading middleware; Agent 2 and 3 both need to understand the runtime flow"
+    },
+    {
+      "id": "T14_config_validation",
+      "name": "Configuration validation review",
+      "category": "analysis",
+      "description": "2 sub-agents check how configuration is validated and handled",
+      "num_agents": 2,
+      "expected_overlap": "medium",
+      "prompt": "You are a reliability engineer reviewing configuration handling. Spawn exactly 2 sub-agents in parallel to audit configuration validation in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py. Identify all constructor parameters, environment variable reads, and default values. Check whether invalid configurations (negative TTLs, empty strings, wrong types) are validated or would cause silent failures.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json. Identify all configuration entry points (CLI args, env vars, config files). Check whether there is validation, sensible defaults, and clear error messages for misconfiguration.\n\nBoth agents should report any configuration that could lead to silent data loss or degraded performance if set incorrectly.",
+      "overlap_tools": ["read"],
+      "notes": "Both agents read overlapping config-related files; Agent 2 reads server.py and index.ts which Agent 1 may also reference"
+    },
+    {
+      "id": "T15_interface_compatibility",
+      "name": "Cross-module interface compatibility check",
+      "category": "analysis",
+      "description": "4 sub-agents verify that module interfaces are compatible at their boundaries",
+      "num_agents": 4,
+      "expected_overlap": "very-high",
+      "prompt": "You are an integration engineer. Spawn exactly 4 sub-agents in parallel to verify interface compatibility across the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Verify that the runtime calls the dedup middleware with the correct arguments and handles all possible return types. Check for type mismatches at the boundary.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Verify that shared memory is initialized and accessed correctly by the runtime. Check for missing cleanup or lifecycle gaps.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py. Verify that the allocator and event system integrate cleanly with the runtime. Check for missing event emissions or unhandled allocator states.\n- Agent 4: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Verify that the sidecar HTTP API correctly wraps the Python runtime — check for argument translation errors, missing endpoints, and response format inconsistencies.\n\nProduce a unified interface compatibility report.",
+      "overlap_tools": ["read"],
+      "notes": "All 4 agents read runtime.py — very high overlap on the central module"
+    },
+    {
+      "id": "T16_code_duplication",
+      "name": "Code duplication detection",
+      "category": "refactoring",
+      "description": "3 sub-agents search for duplicated logic across different module boundaries",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a tech lead hunting for code duplication. Spawn exactly 3 sub-agents in parallel to find duplicated logic in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/. Look for duplicated hash/key generation logic, duplicated validation code, and copy-pasted error handling patterns across modules. Compare dedup.py, shared_memory.py, and task_lock.py specifically.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Look for logic that is duplicated between the sidecar and the runtime (e.g., serialization, validation, key computation done in both places instead of one).\n- Agent 3: Read all test files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/. Look for duplicated test setup, repeated fixture code, and helper functions that should be extracted into conftest.py. Also compare test fixtures with the main source to find copy-pasted code.\n\nFor each duplication found, recommend where the shared logic should live. Produce a unified report.",
+      "overlap_tools": ["read", "glob"],
+      "notes": "All 3 agents need to read runtime.py and the middleware files to compare — high read overlap"
+    },
+    {
+      "id": "T17_type_annotations",
+      "name": "Type annotation completeness check",
+      "category": "code-review",
+      "description": "3 sub-agents audit type annotation coverage across the Python codebase",
+      "num_agents": 3,
+      "expected_overlap": "medium",
+      "prompt": "You are a type safety advocate. Spawn exactly 3 sub-agents in parallel to audit type annotation completeness in the AgentGlue Python codebase at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ (allocator.py, events.py, metrics.py, recorder.py, __init__.py). For each public function and method, check whether parameters and return types are annotated. List all untyped public APIs.\n- Agent 2: Read all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ (dedup.py, shared_memory.py, task_lock.py, __init__.py). For each public function and method, check whether parameters and return types are annotated. Look for uses of 'Any' or 'dict' without type parameters.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/__init__.py. Check that the main public API is fully typed. Also grep all Python files for '# type: ignore' comments and assess whether they are justified.\n\nProduce a unified type coverage report with a percentage estimate per module.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "Agent 3 greps all Python files, overlapping with files Agent 1 and 2 already read; __init__.py may be read by all"
+    },
+    {
+      "id": "T18_exception_hierarchy",
+      "name": "Exception hierarchy analysis",
+      "category": "analysis",
+      "description": "2 sub-agents map and evaluate the custom exception hierarchy",
+      "num_agents": 2,
+      "expected_overlap": "high",
+      "prompt": "You are a reliability engineer reviewing exception design. Spawn exactly 2 sub-agents in parallel to analyze the exception hierarchy in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/. Identify every custom exception class defined anywhere. Map the inheritance hierarchy. Then grep for all 'raise' statements and check which exceptions are raised where. Report whether exceptions are too broad (catching Exception) or too narrow.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and all test files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/. Check how exceptions from the Python core are translated into HTTP error responses by the sidecar. Verify that tests cover the main exception paths. Identify any exceptions that would result in generic 500 responses instead of meaningful error codes.\n\nBoth agents should read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py to understand the central error handling flow. Produce a unified exception design report.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "Both agents read runtime.py and grep Python files for raise/except — high overlap"
+    },
+    {
+      "id": "T19_concurrency_patterns",
+      "name": "Concurrency pattern review",
+      "category": "debugging",
+      "description": "4 sub-agents examine concurrency patterns for correctness",
+      "num_agents": 4,
+      "expected_overlap": "very-high",
+      "prompt": "You are a concurrency expert. Spawn exactly 4 sub-agents in parallel to review concurrency patterns in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Analyze the task locking mechanism: is it deadlock-free? Are locks released on exceptions? Is there a timeout? Can lock starvation occur?\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Analyze SQLite concurrent access patterns: are WAL mode or proper transaction isolation used? Can two agents corrupt the cache simultaneously?\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py. Analyze the HTTP server threading model: how are concurrent requests handled? Is there shared mutable state without synchronization? Can race conditions occur between parallel agent requests?\n- Agent 4: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py. Analyze the agent allocation flow under concurrency: what happens when multiple sessions_spawn calls arrive simultaneously? Are there TOCTOU races in the allocator?\n\nAll agents should also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py for full context. Produce a unified concurrency safety report.",
+      "overlap_tools": ["read"],
+      "notes": "All 4 agents read runtime.py; agents 1+2 overlap on middleware; agents 3+4 overlap on server.py context — very high overlap"
+    },
+    {
+      "id": "T20_api_versioning",
+      "name": "API versioning and backward compatibility",
+      "category": "analysis",
+      "description": "3 sub-agents check API stability and versioning practices",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a platform engineer evaluating API stability. Spawn exactly 3 sub-agents in parallel to review API versioning in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/__init__.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml. Identify the current version, what symbols are exported, and whether there is a __all__ list. Check if the public API surface is explicitly defined or if internal modules leak into the public interface.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json. Check whether the HTTP API has versioned routes (e.g., /v1/), whether the package.json version matches the Python version, and whether breaking changes would be detectable.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md. Check whether the TypeScript plugin documents its API contract, whether hook names are stable, and whether the README accurately reflects the current API.\n\nAll agents should assess backward compatibility risks. Produce a unified versioning and stability report.",
+      "overlap_tools": ["read"],
+      "notes": "All 3 agents read README.md; agents 2+3 both read package.json context — high overlap"
+    },
+    {
+      "id": "T21_build_ci_analysis",
+      "name": "Build system and CI analysis",
+      "category": "analysis",
+      "description": "2 sub-agents analyze the build and CI setup for both Python and TypeScript",
+      "num_agents": 2,
+      "expected_overlap": "medium",
+      "prompt": "You are a build engineer. Spawn exactly 2 sub-agents in parallel to analyze the build system for the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md. Examine the Python build configuration: build backend, dependencies, optional dependencies, entry points, and scripts. Check for missing metadata (license, classifiers, URLs). Then read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/conftest.py to understand the test infrastructure.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/tsconfig.json, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/requirements.txt. Examine the TypeScript build configuration, compiler options, and sidecar dependencies. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md to check if build instructions are accurate.\n\nBoth agents should identify any missing CI configuration, test automation gaps, or build reproducibility issues.",
+      "overlap_tools": ["read"],
+      "notes": "Both agents read README.md — moderate overlap on documentation and cross-referencing"
+    },
+    {
+      "id": "T22_memory_usage_patterns",
+      "name": "Memory usage pattern analysis",
+      "category": "optimization",
+      "description": "3 sub-agents analyze memory usage patterns and potential leaks",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a performance engineer focused on memory. Spawn exactly 3 sub-agents in parallel to analyze memory usage patterns in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Analyze in-memory data structures: are there unbounded caches or dictionaries that grow without limits? Is there TTL-based eviction? What happens to memory when many agents are spawned and then completed?\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py. Analyze the runtime and recording layer: does the recorder accumulate events without bounds? Are completed sessions cleaned up? Is there a risk of memory exhaustion during long-running sessions?\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py. Analyze the sidecar and metrics layer: does the server accumulate per-request state? Do metrics cardinality grow unbounded? Are there response buffers that could accumulate?\n\nAll agents should grep for patterns like 'append', 'setdefault', dict/list growth without cleanup. Produce a unified memory risk report.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All 3 agents grep for accumulation patterns across the same codebase — high search overlap"
+    },
+    {
+      "id": "T23_network_error_handling",
+      "name": "Network error handling review",
+      "category": "debugging",
+      "description": "3 sub-agents review how network failures are handled across the stack",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a distributed systems engineer. Spawn exactly 3 sub-agents in parallel to review network error handling in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Analyze how the TypeScript plugin handles HTTP errors when communicating with the sidecar: connection refused, timeouts, 5xx responses, malformed JSON. Are there retries? Circuit breakers? Graceful degradation?\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py. Analyze how the sidecar handles errors when calling into the Python runtime: what if the runtime throws? What if SQLite is locked? Are errors properly translated to HTTP status codes or do they leak stack traces?\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Analyze what happens when the dedup SQLite database is unavailable or corrupted mid-operation. Does the runtime fall back gracefully or crash the entire session?\n\nAll agents should also grep for 'timeout', 'retry', 'ConnectionError', and 'ECONNREFUSED' across the full repo. Produce a unified network resilience report.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All 3 agents grep the full repo for error patterns — high search overlap; agents 2+3 both read runtime.py"
+    },
+    {
+      "id": "T24_cache_key_collision",
+      "name": "Cache key collision analysis",
+      "category": "bug-hunt",
+      "description": "2 sub-agents investigate whether cache key generation can produce collisions",
+      "num_agents": 2,
+      "expected_overlap": "high",
+      "prompt": "You are a data integrity specialist. Spawn exactly 2 sub-agents in parallel to analyze cache key collision risks in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Trace the cache key generation logic: what inputs are hashed? Is the hash function collision-resistant? Could two different tool calls with different arguments produce the same key? What about key truncation or encoding issues?\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Trace how the TypeScript plugin constructs cache lookup requests and how the sidecar forwards them. Could the serialization layer lose information (e.g., argument ordering, floating point precision, Unicode normalization) that would cause false cache hits?\n\nBoth agents should read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py to understand how cache keys flow through the system end to end. Report any collision scenarios with concrete examples.",
+      "overlap_tools": ["read"],
+      "notes": "Both agents read runtime.py and need to understand the key flow across all layers — high overlap"
+    },
+    {
+      "id": "T25_sqlite_optimization",
+      "name": "SQLite schema and query optimization",
+      "category": "optimization",
+      "description": "3 sub-agents review SQLite usage for schema design, query efficiency, and concurrency",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a database engineer. Spawn exactly 3 sub-agents in parallel to optimize SQLite usage in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Analyze the schema: are tables normalized appropriately? Are there missing indexes for common query patterns? Is there unnecessary data stored (e.g., full response bodies vs hashes)? Recommend schema changes.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py. Analyze all SQL queries: are there full table scans? Missing WHERE clauses? Suboptimal JOIN patterns? Compare what the tests exercise vs what the production code does.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Analyze SQLite concurrency settings: is WAL mode enabled? What is the busy_timeout? Are transactions held too long? Could the connection pooling strategy be improved for multi-agent workloads?\n\nProduce a unified SQLite optimization report with prioritized recommendations.",
+      "overlap_tools": ["read"],
+      "notes": "All 3 agents read dedup.py — high overlap on the main SQLite file"
+    },
+    {
+      "id": "T26_plugin_lifecycle",
+      "name": "Plugin lifecycle edge cases",
+      "category": "debugging",
+      "description": "3 sub-agents explore edge cases in the plugin lifecycle",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a reliability engineer testing edge cases. Spawn exactly 3 sub-agents in parallel to analyze plugin lifecycle edge cases in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py. Analyze what happens during startup: what if the sidecar is not running when the plugin initializes? What if the sidecar crashes mid-session? Is there reconnection logic? What state is lost?\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Analyze what happens during shutdown: is the SQLite database closed cleanly? Are pending writes flushed? What if the process is killed with SIGKILL during a cache write? Is there WAL recovery?\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Analyze what happens when sub-agents are spawned but never complete: is there a timeout? Do resources leak? What about orphaned sessions in the allocator?\n\nProduce a unified lifecycle edge case report with severity ratings.",
+      "overlap_tools": ["read"],
+      "notes": "All 3 agents read runtime.py and index.ts — high overlap on core lifecycle files"
+    },
+    {
+      "id": "T27_readme_accuracy",
+      "name": "README accuracy verification",
+      "category": "documentation",
+      "description": "4 sub-agents verify that README claims match the actual codebase",
+      "num_agents": 4,
+      "expected_overlap": "very-high",
+      "prompt": "You are a documentation auditor. Spawn exactly 4 sub-agents in parallel to verify the accuracy of the README for the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/__init__.py. Verify that every code example in the README actually works — check import paths, function signatures, and parameter names against the real source.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml. Verify that installation instructions, dependency lists, and version requirements in the README match pyproject.toml. Check that any pip install commands reference the correct package name.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json. Verify that TypeScript/Node setup instructions match the actual package.json scripts, dependencies, and configuration.\n- Agent 4: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Verify that architecture diagrams or descriptions in the README match the actual component interactions in the code.\n\nProduce a unified accuracy report listing every README claim that is outdated or incorrect.",
+      "overlap_tools": ["read"],
+      "notes": "All 4 agents read README.md — very high overlap on the documentation file"
+    },
+    {
+      "id": "T28_import_dependency_graph",
+      "name": "Import dependency graph analysis",
+      "category": "analysis",
+      "description": "3 sub-agents map and analyze import dependencies for circular imports and layering violations",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a software architect analyzing module dependencies. Spawn exactly 3 sub-agents in parallel to map the import dependency graph of the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ (allocator.py, events.py, metrics.py, recorder.py, __init__.py). For each file, list all imports (stdlib, third-party, internal). Build a dependency graph for the core module. Check for circular imports or inappropriate upward dependencies (core importing from middleware).\n- Agent 2: Read all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ (dedup.py, shared_memory.py, task_lock.py, __init__.py) and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. For each file, list all imports. Check whether middleware correctly depends only on core and stdlib, or if there are layering violations.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/__init__.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, and all test files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/. Analyze external-facing import paths: what does __init__.py re-export? Does the sidecar import internal modules it should not? Do tests import private APIs?\n\nProduce a unified dependency analysis with a layering diagram and a list of violations.",
+      "overlap_tools": ["read", "glob"],
+      "notes": "Agents 1+2 overlap on __init__.py files and core modules; Agent 2+3 overlap on runtime.py — high overlap"
+    },
+    {
+      "id": "T29_timeout_retry_logic",
+      "name": "Timeout and retry logic review",
+      "category": "debugging",
+      "description": "3 sub-agents review all timeout and retry mechanisms for correctness",
+      "num_agents": 3,
+      "expected_overlap": "high",
+      "prompt": "You are a distributed systems engineer reviewing resilience patterns. Spawn exactly 3 sub-agents in parallel to review timeout and retry logic in the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py. Identify all timeout values (SQLite busy_timeout, lock acquisition timeout, TTL values). Check whether timeouts are configurable, whether they have sensible defaults, and whether timeout errors are handled gracefully.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Identify all HTTP request timeouts, retry logic, and backoff strategies. Check whether the plugin retries idempotent vs non-idempotent requests correctly. Look for retry storms or missing jitter in backoff.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Trace the end-to-end timeout chain: what is the total worst-case latency from plugin request to response? Are there cascading timeout issues where inner timeouts exceed outer ones?\n\nAll agents should grep the full repo for 'timeout', 'retry', 'backoff', and 'sleep' to ensure no timeout logic is missed. Produce a unified timeout and retry report.",
+      "overlap_tools": ["read", "grep"],
+      "notes": "All 3 agents grep the full repo for timeout/retry patterns — high search overlap; Agent 3 reads files from both Agent 1 and 2 scopes"
+    },
+    {
+      "id": "T30_full_codebase_health",
+      "name": "Full codebase health check",
+      "category": "analysis",
+      "description": "6 sub-agents perform a comprehensive health check covering every dimension",
+      "num_agents": 6,
+      "expected_overlap": "very-high",
+      "prompt": "You are the engineering director commissioning a full codebase health check. Spawn exactly 6 sub-agents in parallel to assess the AgentGlue project at /home/ubuntu/.openclaw/workspace/projects/AgentGlue/:\n- Agent 1 (Code Quality): Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Assess code quality: naming conventions, function length, cyclomatic complexity, comments-to-code ratio.\n- Agent 2 (Test Health): Read all test files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/conftest.py. Assess test health: number of tests, assertion density, fixture reuse, edge case coverage, flaky test risk.\n- Agent 3 (Security Posture): Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Grep the full repo for security anti-patterns: eval, exec, pickle.loads, SQL string formatting, hardcoded credentials.\n- Agent 4 (Documentation): Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/__init__.py. Assess documentation completeness: does the README cover installation, usage, architecture, and contribution? Are docstrings present on public APIs?\n- Agent 5 (Performance): Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Assess performance instrumentation: are critical paths measured? Are there O(n^2) algorithms, unbounded loops, or missing caching?\n- Agent 6 (Integration): Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Assess integration health: are the Python, sidecar, and TypeScript components well-integrated? Are there version mismatches, protocol disagreements, or missing error propagation?\n\nEach agent must produce a score (1-10) and a prioritized list of issues. Combine all outputs into a unified health dashboard.",
+      "overlap_tools": ["read", "grep", "glob"],
+      "notes": "All 6 agents read overlapping files — runtime.py is read by agents 1, 5, 6; dedup.py by agents 1, 3, 5; server.py by agents 3, 6; README by agent 4 (and implicitly others). This is the maximum-overlap stress test."
+    }
+  ]
+}

@@ -1,0 +1,911 @@
+{
+  "meta": {
+    "version": "1.0",
+    "target_repo": "AgentGlue",
+    "target_path": "/home/ubuntu/.openclaw/workspace/projects/AgentGlue",
+    "description": "100 lightweight single-agent benchmark tasks for AgentGlue cache evaluation",
+    "design": "Tasks are ordered so later tasks naturally overlap with earlier ones. Running sequentially, AgentGlue cache hits should increase over time. Groups A-C establish baseline reads/searches; Groups D-G re-access the same resources with different questions, generating cache hits."
+  },
+  "tasks": [
+    {
+      "id": "S001",
+      "name": "read runtime.py public methods",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and count the number of public methods (methods not starting with underscore). List each one.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S031", "S033", "S034", "S052", "S057", "S071", "S086"],
+      "notes": "First read of runtime.py; many later tasks re-read this file."
+    },
+    {
+      "id": "S002",
+      "name": "read dedup.py class names",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all class names defined in it.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S032", "S035", "S051", "S055", "S071", "S086"],
+      "notes": "First read of dedup.py; re-read in Groups D, E, F."
+    },
+    {
+      "id": "S003",
+      "name": "read shared_memory.py data flow",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and explain the data flow from write to read.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S036", "S053", "S071", "S076", "S086"],
+      "notes": "First read of shared_memory.py."
+    },
+    {
+      "id": "S004",
+      "name": "read task_lock.py lock mechanisms",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and identify all lock mechanisms used (mutex, semaphore, etc.).",
+      "expected_tools": ["read"],
+      "overlap_with": ["S037", "S054", "S075", "S086"],
+      "notes": "First read of task_lock.py."
+    },
+    {
+      "id": "S005",
+      "name": "read allocator.py strategy",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe the resource allocation strategy it implements.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S038", "S056", "S074", "S087"],
+      "notes": "First read of allocator.py."
+    },
+    {
+      "id": "S006",
+      "name": "read events.py event types",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list every event type or event class defined.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S039", "S058", "S074", "S087"],
+      "notes": "First read of events.py."
+    },
+    {
+      "id": "S007",
+      "name": "read metrics.py metric names",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list all metric names or metric identifiers tracked.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S040", "S059", "S074", "S087"],
+      "notes": "First read of metrics.py."
+    },
+    {
+      "id": "S008",
+      "name": "read recorder.py mechanism",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and explain how the recording mechanism works.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S041", "S060", "S074", "S087"],
+      "notes": "First read of recorder.py."
+    },
+    {
+      "id": "S009",
+      "name": "read server.py HTTP endpoints",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all HTTP endpoints (routes) it defines.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S042", "S061", "S072", "S088"],
+      "notes": "First read of server.py."
+    },
+    {
+      "id": "S010",
+      "name": "read index.ts registered tools",
+      "category": "read",
+      "prompt": "Read the file /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all tools or tool names that are registered.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S043", "S062", "S072", "S088"],
+      "notes": "First read of index.ts."
+    },
+    {
+      "id": "S011",
+      "name": "search __init__ methods",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'def __init__' and list every match with file path and line number.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S044", "S063", "S089"],
+      "notes": "First broad grep for __init__; re-used in Groups D and E."
+    },
+    {
+      "id": "S012",
+      "name": "search async functions",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'async def' and list every async function found.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S045", "S064", "S089"],
+      "notes": "First search for async patterns."
+    },
+    {
+      "id": "S013",
+      "name": "search sqlite references",
+      "category": "search",
+      "prompt": "Search the entire /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ repo for any references to 'sqlite' (case-insensitive) and list all matches.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S046", "S065", "S090"],
+      "notes": "First sqlite search; overlaps with test_sqlite_backend analysis."
+    },
+    {
+      "id": "S014",
+      "name": "search import statements in src",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for import statements (lines starting with 'import' or 'from') and list them grouped by file.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S047", "S066", "S091"],
+      "notes": "First import scan."
+    },
+    {
+      "id": "S015",
+      "name": "search try/except patterns",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for try/except error handling blocks. List the file, line number, and exception type caught.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S048", "S067", "S071", "S092"],
+      "notes": "First error-handling search."
+    },
+    {
+      "id": "S016",
+      "name": "search TODO/FIXME comments",
+      "category": "search",
+      "prompt": "Search the entire /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ repo for TODO and FIXME comments. List each one with file path and line.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S068", "S093"],
+      "notes": "First TODO/FIXME scan."
+    },
+    {
+      "id": "S017",
+      "name": "search type annotations",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for type annotations (patterns like ': str', ': int', ': list', '-> ') and count them per file.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S069", "S094"],
+      "notes": "First type-annotation search."
+    },
+    {
+      "id": "S018",
+      "name": "search decorator usage",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for decorator usage (lines starting with @) and list each decorator with its file and line.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S033", "S070", "S095"],
+      "notes": "First decorator search."
+    },
+    {
+      "id": "S019",
+      "name": "search logging/print statements",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for logging calls (logger., logging.) and print() statements. List all matches.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S096"],
+      "notes": "First logging scan."
+    },
+    {
+      "id": "S020",
+      "name": "search test functions",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ for test function definitions (def test_) and list them all.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S050", "S097"],
+      "notes": "First test-function scan."
+    },
+    {
+      "id": "S021",
+      "name": "list src/agentglue directory",
+      "category": "list",
+      "prompt": "List all files and subdirectories in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ and describe the project structure.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S028", "S086", "S087", "S098"],
+      "notes": "First listing of main source dir."
+    },
+    {
+      "id": "S022",
+      "name": "list tests directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and briefly describe what each test file likely covers.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S029", "S097"],
+      "notes": "First listing of tests dir."
+    },
+    {
+      "id": "S023",
+      "name": "list sidecar directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/ and describe the sidecar structure.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S030", "S088"],
+      "notes": "First listing of sidecar dir."
+    },
+    {
+      "id": "S024",
+      "name": "list middleware directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and name each middleware module.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S086", "S098"],
+      "notes": "First listing of middleware dir."
+    },
+    {
+      "id": "S025",
+      "name": "list core directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and describe what each core module likely does.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S087", "S098"],
+      "notes": "First listing of core dir."
+    },
+    {
+      "id": "S026",
+      "name": "list project root",
+      "category": "list",
+      "prompt": "List all files in the root of /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and identify configuration files vs source files.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S098", "S099"],
+      "notes": "First listing of project root."
+    },
+    {
+      "id": "S027",
+      "name": "list all Python files",
+      "category": "list",
+      "prompt": "Find all Python files (*.py) anywhere under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list them with their paths.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S098", "S099"],
+      "notes": "First full Python file listing."
+    },
+    {
+      "id": "S028",
+      "name": "list all TypeScript files",
+      "category": "list",
+      "prompt": "Find all TypeScript files (*.ts) anywhere under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list them.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S088", "S099"],
+      "notes": "First full TypeScript file listing."
+    },
+    {
+      "id": "S029",
+      "name": "list examples directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/examples/ and describe what examples are provided.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S099"],
+      "notes": "First listing of examples dir."
+    },
+    {
+      "id": "S030",
+      "name": "list scripts directory",
+      "category": "list",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/scripts/ and describe what each script does based on its name.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S099"],
+      "notes": "First listing of scripts dir."
+    },
+    {
+      "id": "S031",
+      "name": "runtime.py error handling",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and identify all error handling patterns (try/except blocks, raise statements, error returns).",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S015", "S052", "S057"],
+      "notes": "Re-reads runtime.py (cached from S001); different question."
+    },
+    {
+      "id": "S032",
+      "name": "dedup.py cache eviction logic",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and explain the cache eviction or expiration logic. What determines when a cached result is invalidated?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S051", "S055"],
+      "notes": "Re-reads dedup.py (cached from S002)."
+    },
+    {
+      "id": "S033",
+      "name": "runtime.py decorators",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list every decorator definition and decorator usage in the file.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S018", "S052"],
+      "notes": "Re-reads runtime.py; overlaps with decorator search S018."
+    },
+    {
+      "id": "S034",
+      "name": "runtime.py hook mechanism",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and explain how the after_tool_call hook mechanism works. What arguments does it receive?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S031", "S033"],
+      "notes": "Re-reads runtime.py; asks about the hook mechanism specifically."
+    },
+    {
+      "id": "S035",
+      "name": "dedup.py hash computation",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and explain how it computes hashes for deduplication. What fields are included in the hash?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S032", "S051"],
+      "notes": "Re-reads dedup.py; asks about hashing."
+    },
+    {
+      "id": "S036",
+      "name": "shared_memory.py concurrency",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and identify how it handles concurrent access from multiple agents.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S003", "S053", "S076"],
+      "notes": "Re-reads shared_memory.py; focuses on concurrency."
+    },
+    {
+      "id": "S037",
+      "name": "task_lock.py deadlock prevention",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and explain what mechanisms exist to prevent deadlocks or handle lock timeouts.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S004", "S054", "S075"],
+      "notes": "Re-reads task_lock.py; focuses on deadlock handling."
+    },
+    {
+      "id": "S038",
+      "name": "allocator.py agent selection",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and explain how it selects which agent to assign a task to.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S005", "S056", "S074"],
+      "notes": "Re-reads allocator.py; focuses on selection logic."
+    },
+    {
+      "id": "S039",
+      "name": "events.py event dispatch",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and explain how events are dispatched to listeners or subscribers.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S006", "S058", "S074"],
+      "notes": "Re-reads events.py; focuses on dispatch mechanism."
+    },
+    {
+      "id": "S040",
+      "name": "metrics.py aggregation",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and explain how metrics are aggregated or summarized. Are there any rolling windows or counters?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S007", "S059", "S074"],
+      "notes": "Re-reads metrics.py; focuses on aggregation."
+    },
+    {
+      "id": "S041",
+      "name": "recorder.py storage format",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and describe the storage format used for recorded data. Is it JSON, SQLite, or something else?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S008", "S060", "S074"],
+      "notes": "Re-reads recorder.py; focuses on storage format."
+    },
+    {
+      "id": "S042",
+      "name": "server.py request validation",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and identify how it validates incoming HTTP requests. Does it use schemas or manual checks?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S009", "S061", "S072"],
+      "notes": "Re-reads server.py; focuses on validation."
+    },
+    {
+      "id": "S043",
+      "name": "index.ts tool parameter schemas",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list the parameter schemas for each registered tool.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S010", "S062", "S072"],
+      "notes": "Re-reads index.ts; focuses on schemas."
+    },
+    {
+      "id": "S044",
+      "name": "init signatures deep dive",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for 'def __init__' and for each match, also show the full method signature (next 3 lines of context).",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S011", "S063"],
+      "notes": "Re-searches __init__ (cached from S011) with context."
+    },
+    {
+      "id": "S045",
+      "name": "async function return types",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'async def' and identify the return type annotation for each async function.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S012", "S064"],
+      "notes": "Re-searches async def (cached from S012)."
+    },
+    {
+      "id": "S046",
+      "name": "sqlite usage patterns",
+      "category": "search",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'sqlite' references and categorize them: are they imports, connection strings, query executions, or test assertions?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S013", "S065"],
+      "notes": "Re-searches sqlite (cached from S013)."
+    },
+    {
+      "id": "S047",
+      "name": "third-party imports",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for import statements and list only the third-party packages (not standard library, not local imports).",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S014", "S066"],
+      "notes": "Re-searches imports (cached from S014); filters differently."
+    },
+    {
+      "id": "S048",
+      "name": "exception types caught",
+      "category": "search",
+      "prompt": "Search all Python files under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'except' and list every distinct exception type that is caught across the codebase.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S015", "S067"],
+      "notes": "Re-searches except (cached from S015); different analysis."
+    },
+    {
+      "id": "S049",
+      "name": "read pyproject.toml dependencies",
+      "category": "read",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and list all dependencies and dev-dependencies.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S091", "S099"],
+      "notes": "First read of pyproject.toml; re-read in later groups."
+    },
+    {
+      "id": "S050",
+      "name": "test file contents overview",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py. List all test function names from both files.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S020", "S022", "S097"],
+      "notes": "Reads both test files; overlaps with S020 search and S022 listing."
+    },
+    {
+      "id": "S051",
+      "name": "dedup.py hash references",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and also search the entire repo for references to 'hash' or 'digest'. How does dedup's hashing relate to other hash usage in the project?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S002", "S032", "S035"],
+      "notes": "Re-reads dedup.py and searches for hash; both should cache-hit."
+    },
+    {
+      "id": "S052",
+      "name": "runtime.py tool registrations",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and search the repo for 'register_tool' or 'tool_call'. How does the runtime register and invoke tools?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S001", "S031", "S034"],
+      "notes": "Re-reads runtime.py and searches for tool patterns."
+    },
+    {
+      "id": "S053",
+      "name": "shared_memory.py key patterns",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and search the repo for 'shared_memory' or 'SharedMemory'. Where else in the project is shared memory referenced?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S003", "S036", "S076"],
+      "notes": "Re-reads shared_memory.py and searches for references."
+    },
+    {
+      "id": "S054",
+      "name": "task_lock.py usage sites",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and search the repo for 'task_lock' or 'TaskLock'. Where is the task lock middleware used?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S004", "S037", "S075"],
+      "notes": "Re-reads task_lock.py and searches for usage."
+    },
+    {
+      "id": "S055",
+      "name": "dedup.py TTL configuration",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and search the repo for 'ttl' or 'TTL' or 'expir'. How is cache TTL configured and used?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S002", "S032", "S035"],
+      "notes": "Re-reads dedup.py; searches for TTL patterns."
+    },
+    {
+      "id": "S056",
+      "name": "allocator.py and agent config",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and search the repo for 'allocat' to find all references to allocation logic.",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S005", "S038", "S074"],
+      "notes": "Re-reads allocator.py and searches for allocation references."
+    },
+    {
+      "id": "S057",
+      "name": "runtime.py middleware chain",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and search for 'middleware' across the repo. How does the runtime build and execute the middleware chain?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S001", "S031", "S034", "S086"],
+      "notes": "Re-reads runtime.py and searches for middleware pattern."
+    },
+    {
+      "id": "S058",
+      "name": "events.py and event emission",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and search the repo for 'emit' or 'dispatch' or 'publish'. How are events emitted throughout the codebase?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S006", "S039", "S087"],
+      "notes": "Re-reads events.py and searches for emission patterns."
+    },
+    {
+      "id": "S059",
+      "name": "metrics.py and metric collection",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and search the repo for 'metric' or 'counter' or 'gauge'. Where are metrics collected throughout the project?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S007", "S040", "S087"],
+      "notes": "Re-reads metrics.py and searches for metric collection."
+    },
+    {
+      "id": "S060",
+      "name": "recorder.py and replay",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and search the repo for 'record' or 'replay'. Is there a replay mechanism that uses recorded data?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S008", "S041", "S087"],
+      "notes": "Re-reads recorder.py and searches for replay patterns."
+    },
+    {
+      "id": "S061",
+      "name": "server.py and sidecar protocol",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and search the repo for 'sidecar'. How does the sidecar communicate with the main runtime?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S009", "S042", "S088"],
+      "notes": "Re-reads server.py and searches for sidecar references."
+    },
+    {
+      "id": "S062",
+      "name": "index.ts and MCP protocol",
+      "category": "mixed",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and search for 'MCP' or 'mcp' in the repo. How does the TypeScript layer implement the MCP protocol?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S010", "S043", "S088"],
+      "notes": "Re-reads index.ts and searches for MCP references."
+    },
+    {
+      "id": "S063",
+      "name": "constructor parameter comparison",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for 'def __init__' with 5 lines of context. Which class has the most constructor parameters?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S011", "S044"],
+      "notes": "Re-searches __init__ (cached from S011/S044)."
+    },
+    {
+      "id": "S064",
+      "name": "async error handling",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'async def' and also for 'await'. How do async functions handle errors when awaiting?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S012", "S045"],
+      "notes": "Re-searches async patterns (cached from S012/S045)."
+    },
+    {
+      "id": "S065",
+      "name": "sqlite schema analysis",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'CREATE TABLE' or 'CREATE INDEX' and also for 'sqlite'. What database schema does the project define?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S013", "S046"],
+      "notes": "Re-searches sqlite (cached from S013/S046)."
+    },
+    {
+      "id": "S066",
+      "name": "dependency graph from imports",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for 'from agentglue' import statements. Describe the internal dependency graph between modules.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S014", "S047"],
+      "notes": "Re-searches imports (cached from S014/S047); focuses on internal deps."
+    },
+    {
+      "id": "S067",
+      "name": "custom exception classes",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for class definitions that inherit from Exception or BaseException. Also search for 'raise'. List all custom exceptions.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S015", "S048"],
+      "notes": "Re-searches exception patterns."
+    },
+    {
+      "id": "S068",
+      "name": "TODO priority assessment",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for TODO and FIXME comments. Read the surrounding context (3 lines) for each and assess which are highest priority.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S016", "S093"],
+      "notes": "Re-searches TODO/FIXME (cached from S016)."
+    },
+    {
+      "id": "S069",
+      "name": "type coverage analysis",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for function definitions ('def ') and check which have return type annotations (->). What percentage of functions have return types?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S017", "S094"],
+      "notes": "Re-searches type annotations (cached from S017)."
+    },
+    {
+      "id": "S070",
+      "name": "decorator patterns classification",
+      "category": "mixed",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for lines starting with '@' and classify the decorators: are they built-in (@property, @staticmethod), framework-provided, or custom?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S018", "S095"],
+      "notes": "Re-searches decorators (cached from S018)."
+    },
+    {
+      "id": "S071",
+      "name": "compare dedup and shared_memory error handling",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Compare their error handling approaches. Which is more robust?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S003", "S015", "S032", "S036"],
+      "notes": "Re-reads two middleware files (both cached) for comparison."
+    },
+    {
+      "id": "S072",
+      "name": "compare server.py and index.ts endpoints",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Do the endpoints in server.py match the tool registrations in index.ts?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S009", "S010", "S042", "S043"],
+      "notes": "Re-reads server.py and index.ts (both cached) for cross-comparison."
+    },
+    {
+      "id": "S073",
+      "name": "compare runtime and recorder interaction",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py. How does the runtime use the recorder? Trace the data flow.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S008", "S034", "S041"],
+      "notes": "Re-reads runtime.py and recorder.py (both cached)."
+    },
+    {
+      "id": "S074",
+      "name": "compare all core modules",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py. How do these four core modules interact?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S005", "S006", "S007", "S008", "S038", "S039", "S040", "S041", "S087"],
+      "notes": "Re-reads all four core files (all cached) for interaction analysis."
+    },
+    {
+      "id": "S075",
+      "name": "compare task_lock and shared_memory",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Both deal with concurrent access. How do their approaches differ?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S003", "S004", "S036", "S037", "S054"],
+      "notes": "Re-reads task_lock.py and shared_memory.py (both cached)."
+    },
+    {
+      "id": "S076",
+      "name": "shared_memory and dedup synergy",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Could shared memory be used to improve dedup? How do they complement each other?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S003", "S032", "S036", "S053"],
+      "notes": "Re-reads shared_memory.py and dedup.py (both cached)."
+    },
+    {
+      "id": "S077",
+      "name": "runtime and allocator integration",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py. How does the runtime use the allocator to assign agents to tasks?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S005", "S034", "S038"],
+      "notes": "Re-reads runtime.py and allocator.py (both cached)."
+    },
+    {
+      "id": "S078",
+      "name": "metrics and events relationship",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py. Are metrics updated in response to events? How are they connected?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S006", "S007", "S039", "S040"],
+      "notes": "Re-reads metrics.py and events.py (both cached)."
+    },
+    {
+      "id": "S079",
+      "name": "dedup and runtime hook",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. How does dedup integrate with the runtime's after_tool_call hook?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S002", "S034", "S035"],
+      "notes": "Re-reads dedup.py and runtime.py (both cached); critical cache path."
+    },
+    {
+      "id": "S080",
+      "name": "recorder and metrics data flow",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py. Does the recorder feed data to metrics, or are they independent? Trace the relationship.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S007", "S008", "S040", "S041"],
+      "notes": "Re-reads recorder.py and metrics.py (both cached)."
+    },
+    {
+      "id": "S081",
+      "name": "server.py and runtime communication",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. How does the sidecar server communicate with the Python runtime?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S001", "S009", "S042", "S061"],
+      "notes": "Re-reads server.py and runtime.py (both cached)."
+    },
+    {
+      "id": "S082",
+      "name": "test coverage of middleware",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and search for references to 'dedup', 'shared_memory', or 'task_lock' in the tests directory. Which middleware modules have test coverage?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S020", "S050", "S097"],
+      "notes": "Re-reads test file and searches tests (both cached)."
+    },
+    {
+      "id": "S083",
+      "name": "package.json and pyproject.toml comparison",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml. Compare the project metadata (name, version, description) between the TypeScript and Python packages.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S049", "S099"],
+      "notes": "Re-reads pyproject.toml (cached from S049); first read of package.json."
+    },
+    {
+      "id": "S084",
+      "name": "all middleware initialization",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py. Compare how each middleware initializes. Do they follow a common pattern?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S003", "S004", "S071", "S075", "S076", "S086"],
+      "notes": "Re-reads all three middleware files (all cached)."
+    },
+    {
+      "id": "S085",
+      "name": "index.ts and server.py type alignment",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py. Are the data types and schemas consistent between the TypeScript and Python sides?",
+      "expected_tools": ["read"],
+      "overlap_with": ["S009", "S010", "S042", "S043", "S072"],
+      "notes": "Re-reads index.ts and server.py (both cached)."
+    },
+    {
+      "id": "S086",
+      "name": "summarize all middleware modules",
+      "category": "analysis",
+      "prompt": "Read all three middleware files: /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py. Write a one-paragraph summary of each.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S002", "S003", "S004", "S024", "S071", "S084"],
+      "notes": "Re-reads all middleware files; maximum middleware cache hits."
+    },
+    {
+      "id": "S087",
+      "name": "summarize all core modules",
+      "category": "analysis",
+      "prompt": "Read all four core files: /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py. Write a one-paragraph summary of each.",
+      "expected_tools": ["read"],
+      "overlap_with": ["S005", "S006", "S007", "S008", "S025", "S074"],
+      "notes": "Re-reads all core files; maximum core cache hits."
+    },
+    {
+      "id": "S088",
+      "name": "summarize sidecar architecture",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Also list all files in the openclaw-agentglue directory. Summarize the sidecar architecture.",
+      "expected_tools": ["read", "glob"],
+      "overlap_with": ["S009", "S010", "S023", "S028", "S072", "S085"],
+      "notes": "Re-reads server.py and index.ts plus dir listing; all cached."
+    },
+    {
+      "id": "S089",
+      "name": "full repo async audit",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'async def' and 'def __init__'. Are there any classes whose __init__ is async (which would be a bug)? List all async functions and all constructors.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S011", "S012", "S044", "S045"],
+      "notes": "Re-searches async and __init__ (both cached from Groups B and D)."
+    },
+    {
+      "id": "S090",
+      "name": "database layer audit",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'sqlite', 'database', 'db_path', 'connection', and 'cursor'. Read any file that contains multiple matches. Summarize the database layer.",
+      "expected_tools": ["grep", "read"],
+      "overlap_with": ["S013", "S046", "S065"],
+      "notes": "Re-searches sqlite patterns (cached); may re-read files from cache."
+    },
+    {
+      "id": "S091",
+      "name": "dependency audit",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for all import statements. Are there any imports of packages not listed in pyproject.toml dependencies?",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S014", "S047", "S049"],
+      "notes": "Re-reads pyproject.toml (cached from S049) and re-searches imports (cached from S014/S047)."
+    },
+    {
+      "id": "S092",
+      "name": "error handling completeness",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for 'try', 'except', 'raise', and 'finally'. Are there any bare 'except:' without specifying an exception type? List all error handling locations.",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S015", "S048", "S067"],
+      "notes": "Re-searches error patterns (cached from S015/S048/S067)."
+    },
+    {
+      "id": "S093",
+      "name": "TODO roadmap extraction",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for TODO, FIXME, HACK, and XXX comments. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md for any mentioned roadmap items. Compile a prioritized TODO list.",
+      "expected_tools": ["grep", "read"],
+      "overlap_with": ["S016", "S068"],
+      "notes": "Re-searches TODO/FIXME (cached from S016/S068); first read of README."
+    },
+    {
+      "id": "S094",
+      "name": "type safety assessment",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ for type annotations ('-> ', ': str', ': int', ': dict', ': list', ': Optional', ': Union'). Also search for 'Any' type usage. How type-safe is the codebase?",
+      "expected_tools": ["grep"],
+      "overlap_with": ["S017", "S069"],
+      "notes": "Re-searches type annotations (cached from S017/S069)."
+    },
+    {
+      "id": "S095",
+      "name": "decorator inventory",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for all decorator usages (lines with @). Read any file that defines a custom decorator. List all custom decorator definitions.",
+      "expected_tools": ["grep", "read"],
+      "overlap_with": ["S018", "S070"],
+      "notes": "Re-searches decorators (cached from S018/S070); may re-read files."
+    },
+    {
+      "id": "S096",
+      "name": "observability audit",
+      "category": "analysis",
+      "prompt": "Search /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ for 'logger', 'logging', 'print(', 'metrics', and 'record'. Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py. Is the project's observability (logging + metrics + recording) comprehensive?",
+      "expected_tools": ["grep", "read"],
+      "overlap_with": ["S007", "S019", "S040", "S059"],
+      "notes": "Re-searches logging (cached from S019) and re-reads metrics.py (cached from S007)."
+    },
+    {
+      "id": "S097",
+      "name": "test completeness review",
+      "category": "analysis",
+      "prompt": "List all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and read each test file. Also list all files in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/. Which source modules lack corresponding test files?",
+      "expected_tools": ["glob", "read"],
+      "overlap_with": ["S020", "S021", "S022", "S050", "S082"],
+      "notes": "Re-lists tests and src dirs (cached from S021/S022); re-reads test files (cached from S050)."
+    },
+    {
+      "id": "S098",
+      "name": "full project structure analysis",
+      "category": "analysis",
+      "prompt": "List all files recursively under /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/. Describe the overall architecture and how the Python and TypeScript components relate.",
+      "expected_tools": ["glob"],
+      "overlap_with": ["S021", "S023", "S024", "S025", "S026", "S027", "S028"],
+      "notes": "Re-lists multiple directories (all cached from Group C)."
+    },
+    {
+      "id": "S099",
+      "name": "full config and metadata scan",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json, and list the project root directory. Summarize all project configuration: name, version, dependencies, scripts, entry points.",
+      "expected_tools": ["read", "glob"],
+      "overlap_with": ["S026", "S049", "S083"],
+      "notes": "Re-reads pyproject.toml and package.json (both cached); re-lists root (cached from S026)."
+    },
+    {
+      "id": "S100",
+      "name": "full codebase executive summary",
+      "category": "analysis",
+      "prompt": "Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Also search the entire repo for 'cache' and 'hook'. Write a 5-sentence executive summary of the AgentGlue project.",
+      "expected_tools": ["read", "grep"],
+      "overlap_with": ["S001", "S002", "S007", "S010", "S032", "S034", "S040", "S052", "S062", "S086", "S087"],
+      "notes": "Final task reads 4 key files and searches 2 patterns; maximum overlap with all prior groups. Should see near-100% cache hit rate."
+    }
+  ]
+}
