@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">AgentGlue</h1>
-<p align="center"><strong>🧠 Middleware orchestration for multi-agent systems — coordinate overlapping tool calls, share exact work, and make collaboration actually behave like collaboration.</strong></p>
+<p align="center"><strong>Middleware orchestration for multi-agent systems.</strong></p>
 
 <p align="center">
   <a href="https://github.com/brickee/AgentGlue/releases"><img src="https://img.shields.io/github/v/release/brickee/AgentGlue?display_name=tag" alt="GitHub release" /></a>
@@ -19,71 +19,45 @@
   <a href="#-quick-example">Quick example</a>
 </p>
 
-AgentGlue is a **middleware orchestration layer** for multi-agent systems. It sits between your orchestrator and your tools so agents can coordinate repeated work instead of stampeding the same files, searches, APIs, and shared state like they’ve never met each other before.
+AgentGlue is a **middleware layer** that sits between your orchestrator and your tools, helping multi-agent systems coordinate overlapping work instead of repeating the same reads, searches, API calls, and state lookups over and over again.
 
 ## 📈 Hilights
 
-Measured on the current **100-test sidecar benchmark suite** and overlap-heavy multi-agent workloads:
+Measured on the current **100-test benchmark suite** and **overlap-heavy multi-agent workloads**:
 
 - **3.7× overall speedup** across benchmarked scenarios
-- **73% total time saved** (`866.4ms → 234.9ms`)
+- **73% total time saved** *(`866.4ms → 234.9ms`)*
 - **76% cache hit rate** across repeated shared work
-- **6.8× speedup** on overlapping search-heavy scenarios
-- **5.0× speedup** in the 10-agent heavy-overlap case
+- **6.8× speedup** on *overlapping search-heavy scenarios*
+- **5.0× speedup** in the *10-agent heavy-overlap case*
 - **~0.6ms median cache-check latency**
 
-> More agents + more overlap = bigger wins. That’s the wedge.
-
-| Metric | Result |
-|---|---:|
-| Overall speedup | **3.7×** |
-| Total time saved | **73%** |
-| Cache hit rate | **76%** |
-| Best search-heavy case | **6.8×** |
-| Best heavy-overlap case | **5.0×** |
-| Median cache-check latency | **0.6ms** |
+> ***More agents + more overlap = bigger wins.***
 
 ## ✨ Key features
 
-### Core runtime
 - **Exact-match dedup** on tool name + args/kwargs hash
 - **Single-flight / in-flight coalescing** for concurrent identical calls
 - **TTL result cache** for repeated sequential calls
-- **SQLite backend** for cross-process cache sharing
-- **Cache invalidation** and full cache clearing
-- **Metrics + event recording** for runtime inspection
-
-### Middleware orchestration stance
-- sits **below** agent orchestration frameworks, not instead of them
-- keeps shared work coordinated across agents and processes
-- stays **framework-agnostic**: OpenClaw, AutoGen, CrewAI, LangGraph, or custom stacks
-- currently focuses on the narrow wedge that actually pays: **overlapping tool work**
-- **exact-match only** for now — no fake semantic magic, no pretending similar means identical
-
-### OpenClaw plugin
-- npm package: [`openclaw-agentglue`](https://www.npmjs.com/package/openclaw-agentglue)
-- auto-managed Python sidecar
-- cache-aware tools:
-  - `agentglue_cached_read`
-  - `agentglue_cached_search`
-  - `agentglue_cached_list`
-- automatic caching via `after_tool_call`
-- health + metrics endpoints
+- **SQLite-backed cross-process cache** for shared coordination across processes
+- **Metrics and event recording** for runtime inspection
+- **Keep shared work coordinated** across agents, tools, and processes
+- **Stay framework-agnostic** across *OpenClaw, AutoGen, CrewAI, LangGraph,* and custom systems
 
 ## 🧭 How it works
 
 ```text
 Agent framework / orchestrator
           ↓
-   AgentGlue middleware
- (dedup + coalescing + cache + metrics)
+       AgentGlue
+  (coordination middleware)
           ↓
         tools / APIs
 ```
 
-If two agents make the **same** tool call at the same time, one execution leads and the others wait.
-If a later agent makes the **same** call again within TTL, it gets the cached result.
-If the calls are merely similar, AgentGlue does not bluff.
+If two agents make the **same** tool call at the same time, **one execution leads** and the others wait.
+If a later agent makes the **same** call again within TTL, it gets the **cached result**.
+If the calls are merely similar, AgentGlue does **not** pretend they are identical.
 
 ## 🛠 Install
 
@@ -136,11 +110,10 @@ glue = AgentGlue(shared_memory=False, rate_limiter=False, task_lock=False)
 
 @glue.tool(ttl=60)
 def search_code(query: str) -> str:
-    print(f"real search: {query}")
     return f"results for {query}"
 
 print(search_code("sqlite sidecar", agent_id="agent-a"))
-print(search_code("sqlite sidecar", agent_id="agent-b"))  # dedup / cache hit
+print(search_code("sqlite sidecar", agent_id="agent-b"))
 print(glue.report())
 ```
 
