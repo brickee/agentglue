@@ -47,12 +47,25 @@ Measured on the current **100-test benchmark suite** and **overlap-heavy multi-a
 ## 🧭 How it works
 
 ```text
-Agents / orchestrator
-        ↓
-    AgentGlue
-(coordination middleware)
-        ↓
-Tools / APIs / files / state
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🤖 Agent A    🤖 Agent B    🎯 Orchestrator       ┃  ← Intelligence Layer
+┃                                                   ┃    Autonomous reasoning
+┃  "Decide what to do"                              ┃    & task decomposition
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                 ⚙️  AgentGlue                     ┃  ← Coordination Layer
+┃         (Coordination Middleware)                 ┃    The "glue" that binds
+┃                                                   ┃    agents to resources
+┃  ┌──────────┬──────────┬──────────┬──────────┐    ┃
+┃  │ Registry │  Router  │ State    │   Auth   │    ┃    · Registry:  discover tools
+┃  │          │          │ Manager  │          │    ┃    · Router:    dispatch calls
+┃  └──────────┴──────────┴──────────┴──────────┘    ┃    · StateMgr:  share context
+┃                                                   ┃    · Auth:      access control
+┃  "Know how to connect"                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  🔧 Tools    📡 APIs    📁 Files    💾 State       ┃  ← Resource Layer
+┃                                                   ┃    External capabilities
+┃  "Do the actual work"                             ┃    & persistent storage
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 **AgentGlue sits in the middle**: agents keep their existing orchestration logic, tools keep their existing interfaces, and AgentGlue coordinates repeated work across both.
