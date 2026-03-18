@@ -11,83 +11,102 @@ Each task dispatches N sub-agents (via `sessions_spawn`) that perform overlappin
 - **Token usage** — input + output tokens
 - **Cache hits** — AgentGlue cache hit rate (when plugin active)
 
-## Tasks (10 scenarios)
+## Suites
 
-| ID | Task | Agents | Overlap |
-|---|---|---:|---|
-| T01 | Code review — dedup middleware | 3 | high |
-| T02 | Bug hunt — middleware layer | 4 | high |
-| T03 | Document public APIs | 3 | medium |
-| T04 | Security audit — full repo | 3 | high |
-| T05 | Test coverage gap analysis | 3 | high |
-| T06 | Dependency & compatibility check | 2 | medium |
-| T07 | Architecture review — cross-cutting | 4 | very-high |
-| T08 | Parallel refactoring proposals | 3 | high |
-| T09 | Performance bottleneck analysis | 3 | high |
-| T10 | New contributor onboarding | 5 | very-high |
+### E2E (30 tasks, 95 sub-agents)
 
-Total: 33 sub-agent spawns across all tasks.
+Complex multi-agent tasks: code review, bug hunting, security audit, architecture review, etc. Each task spawns 2-6 sub-agents.
+
+### Simple (100 tasks, 224 sub-agents)
+
+Lightweight multi-agent tasks across 10 coordination patterns:
+
+| Group | Pattern | Tasks | Agents/task |
+|---|---|---:|---:|
+| 1 | Same file, different questions | 10 | 2 |
+| 2 | Same search, different scopes | 10 | 2 |
+| 3 | Parallel file reads | 10 | 3 |
+| 4 | Cross-reference check | 10 | 2 |
+| 5 | Duplicate review (security vs perf) | 10 | 2 |
+| 6 | Search then read | 10 | 2 |
+| 7 | Multi-file summary | 10 | 3 |
+| 8 | Test vs source | 10 | 2 |
+| 9 | Config + code | 10 | 2 |
+| 10 | Full overlap stress | 10 | 2-3 |
 
 ## How to run
 
 ### Prerequisites
 
 - OpenClaw gateway running: `systemctl --user start openclaw-gateway`
+- AgentGlue plugin installed: `openclaw plugins install openclaw-agentglue`
 - Python 3.10+
 
-### Step 1: Baseline (no AgentGlue)
+### One-command A/B comparison (recommended)
 
-Make sure the AgentGlue plugin is NOT installed, then:
+The script automatically disables the plugin for baseline, re-enables for agentglue, restarts the gateway between phases, and produces a comparison report:
 
 ```bash
 cd /home/ubuntu/.openclaw/workspace/projects/AgentGlue
-python3 benchmarks/run_benchmark.py --mode baseline
+
+# Simple suite (100 tasks, ~2-4h)
+python3 benchmarks/run_benchmark.py --suite simple --mode compare
+
+# E2E suite (30 tasks, ~2-5h)
+python3 benchmarks/run_benchmark.py --suite e2e --mode compare
+
+# Test with a few tasks first
+python3 benchmarks/run_benchmark.py --suite simple --mode compare --tasks S001,S002,S003
 ```
 
-### Step 2: Install AgentGlue
+### Manual phases
 
 ```bash
-openclaw plugins install openclaw-agentglue
-systemctl --user restart openclaw-gateway
-```
+# Baseline (plugin disabled)
+python3 benchmarks/run_benchmark.py --suite simple --mode baseline
 
-### Step 3: With AgentGlue
+# AgentGlue (plugin enabled)
+python3 benchmarks/run_benchmark.py --suite simple --mode agentglue
 
-```bash
-python3 benchmarks/run_benchmark.py --mode agentglue
-```
-
-### Step 4: Compare
-
-```bash
-python3 benchmarks/run_benchmark.py --compare benchmarks/results/baseline_*.json benchmarks/results/agentglue_*.json
+# Compare existing results
+python3 benchmarks/run_benchmark.py --compare results/simple_baseline_*.json results/simple_agentglue_*.json
 ```
 
 ## Options
 
 ```bash
-# Run specific tasks only
-python3 benchmarks/run_benchmark.py --mode baseline --tasks T01,T04,T07
+# Run specific tasks
+python3 benchmarks/run_benchmark.py --suite e2e --mode compare --tasks T01,T04,T07
 
-# Dry run (show tasks, no execution)
-python3 benchmarks/run_benchmark.py --mode baseline --dry-run
+# Dry run (show plan, no execution)
+python3 benchmarks/run_benchmark.py --suite simple --mode compare --dry-run
 
-# Custom timeout per task (default 600s)
-python3 benchmarks/run_benchmark.py --mode baseline --timeout 300
+# Custom timeout per task
+python3 benchmarks/run_benchmark.py --suite e2e --mode compare --timeout 300
 ```
 
 ## Output
 
 Results are saved to `benchmarks/results/` as JSON:
-- `baseline_YYYYMMDD_HHMMSS.json`
-- `agentglue_YYYYMMDD_HHMMSS.json`
+- `{suite}_baseline_YYYYMMDD_HHMMSS.json`
+- `{suite}_agentglue_YYYYMMDD_HHMMSS.json`
 - `comparison_YYYYMMDD_HHMMSS.json`
 
 ## Cost estimate
 
-Each full run spawns ~33 sub-agents. Cost depends on model:
-- GPT-5.4: ~$2-5 per full run
-- GLM-5: ~$0.5-1 per full run
-- Kimi K2.5: ~$0.3-0.8 per full run
+| Suite | Sub-agents | GPT-5.4 | GLM-5 | Kimi K2.5 |
+|---|---:|---:|---:|---:|
+| Simple (×2 phases) | 448 | ~$8-15 | ~$2-4 | ~$1-3 |
+| E2E (×2 phases) | 190 | ~$5-10 | ~$1-3 | ~$0.5-2 |
 
-Running both baseline + agentglue = 2 full runs.
+## How compare mode works
+
+```
+1. Read openclaw.json → set plugins.entries.openclaw-agentglue.enabled = false
+2. Restart gateway (systemctl --user restart openclaw-gateway)
+3. Run all tasks → save baseline results
+4. Set plugins.entries.openclaw-agentglue.enabled = true
+5. Restart gateway
+6. Run same tasks → save agentglue results
+7. Generate comparison report
+```

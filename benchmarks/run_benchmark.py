@@ -4,31 +4,30 @@ AgentGlue End-to-End Benchmark Runner
 
 Two benchmark suites:
   --suite e2e      30 multi-agent tasks (spawn 2-6 sub-agents each)
-  --suite simple   100 lightweight single-agent tasks (sequential, cache accumulates)
+  --suite simple   100 lightweight multi-agent tasks (2-3 agents each)
+
+Three run modes:
+  --mode baseline    Run WITHOUT AgentGlue plugin (plugin must not be active)
+  --mode agentglue   Run WITH AgentGlue plugin (plugin must be installed)
+  --mode compare     Automatic A/B: disable plugin → run baseline → enable → run agentglue → report
 
 Usage:
-  # E2E multi-agent benchmark (baseline)
-  python3 benchmarks/run_benchmark.py --suite e2e --mode baseline
+  # One-command A/B comparison (recommended)
+  python3 benchmarks/run_benchmark.py --suite simple --mode compare
+  python3 benchmarks/run_benchmark.py --suite e2e --mode compare
 
-  # E2E multi-agent benchmark (with AgentGlue)
+  # Or run each phase manually
+  python3 benchmarks/run_benchmark.py --suite e2e --mode baseline
   python3 benchmarks/run_benchmark.py --suite e2e --mode agentglue
 
-  # Simple 100-task benchmark (baseline)
-  python3 benchmarks/run_benchmark.py --suite simple --mode baseline
-
-  # Simple 100-task benchmark (with AgentGlue)
-  python3 benchmarks/run_benchmark.py --suite simple --mode agentglue
-
   # Run specific tasks only
-  python3 benchmarks/run_benchmark.py --suite e2e --mode baseline --tasks T01,T04,T07
-  python3 benchmarks/run_benchmark.py --suite simple --mode baseline --tasks S001,S010,S050
+  python3 benchmarks/run_benchmark.py --suite e2e --mode compare --tasks T01,T04,T07
 
-  # Compare two result files
-  python3 benchmarks/run_benchmark.py --compare results/baseline_*.json results/agentglue_*.json
+  # Compare two existing result files
+  python3 benchmarks/run_benchmark.py --compare results/e2e_baseline_*.json results/e2e_agentglue_*.json
 
   # Dry run — show tasks without executing
   python3 benchmarks/run_benchmark.py --suite e2e --mode baseline --dry-run
-  python3 benchmarks/run_benchmark.py --suite simple --mode baseline --dry-run
 """
 
 import argparse
@@ -88,6 +87,74 @@ def check_agentglue_plugin() -> bool:
     # Fallback: check raw output
     if isinstance(r["data"], str):
         return "agentglue" in r["data"].lower()
+    return False
+
+
+OPENCLAW_CONFIG = Path.home() / ".openclaw" / "openclaw.json"
+
+
+def _read_openclaw_config() -> dict:
+    """Read the OpenClaw config file."""
+    with open(OPENCLAW_CONFIG) as f:
+        return json.load(f)
+
+
+def _write_openclaw_config(config: dict) -> None:
+    """Write the OpenClaw config file (with backup)."""
+    backup = OPENCLAW_CONFIG.with_suffix(".json.bench-bak")
+    if OPENCLAW_CONFIG.exists():
+        import shutil
+        shutil.copy2(OPENCLAW_CONFIG, backup)
+    with open(OPENCLAW_CONFIG, "w") as f:
+        json.dump(config, f, indent=2)
+
+
+def set_agentglue_enabled(enabled: bool) -> bool:
+    """Enable or disable the AgentGlue plugin in openclaw.json.
+
+    Returns True if a change was made.
+    """
+    config = _read_openclaw_config()
+    plugins = config.setdefault("plugins", {})
+    entries = plugins.setdefault("entries", {})
+    ag = entries.setdefault("openclaw-agentglue", {})
+
+    current = ag.get("enabled", True)  # default is enabled if entry exists
+    if current == enabled:
+        return False
+
+    ag["enabled"] = enabled
+    _write_openclaw_config(config)
+    return True
+
+
+def is_agentglue_installed() -> bool:
+    """Check if the AgentGlue plugin is installed (regardless of enabled state)."""
+    try:
+        config = _read_openclaw_config()
+        installs = config.get("plugins", {}).get("installs", {})
+        if "openclaw-agentglue" in installs:
+            return True
+        # Also check extensions dir
+        ext_dir = Path.home() / ".openclaw" / "extensions" / "openclaw-agentglue"
+        return ext_dir.exists()
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False
+
+
+def restart_gateway(wait: int = 8) -> bool:
+    """Restart the OpenClaw gateway and wait for it to be healthy."""
+    print(f"  Restarting gateway...", end="", flush=True)
+    subprocess.run(["systemctl", "--user", "restart", "openclaw-gateway"],
+                   capture_output=True, timeout=15)
+    # Wait for health
+    for i in range(wait):
+        time.sleep(1)
+        print(".", end="", flush=True)
+        if check_gateway():
+            print(" OK")
+            return True
+    print(" TIMEOUT")
     return False
 
 
@@ -501,6 +568,219 @@ def compare_results(baseline_path: str, agentglue_path: str):
 
 
 # ---------------------------------------------------------------------------
+# Run a single phase (baseline or agentglue) and return results + output path
+# ---------------------------------------------------------------------------
+
+def run_phase(mode: str, suite: str, tasks: list[dict], model: str | None,
+              timeout: int) -> tuple[dict, Path]:
+    """Run one benchmark phase and save results. Returns (output_dict, output_path)."""
+    suite_label = "E2E Multi-Agent" if suite == "e2e" else "Simple (multi-agent)"
+
+    plugin_active = check_agentglue_plugin()
+
+    RESULTS_DIR.mkdir(exist_ok=True)
+    results = []
+    start_all = time.time()
+
+    for i, task in enumerate(tasks, 1):
+        print(f"\n[{i}/{len(tasks)}]", end="")
+        try:
+            result = run_task(task, mode, model, timeout, suite=suite)
+            results.append(result)
+        except KeyboardInterrupt:
+            print("\n\nInterrupted by user. Saving partial results...")
+            break
+        except Exception as e:
+            print(f"  [ERROR] {e}")
+            results.append({
+                "task_id": task["id"],
+                "task_name": task["name"],
+                "mode": mode,
+                "success": False,
+                "wall_time_s": 0,
+                "total_tool_calls": 0,
+                "errors": str(e),
+            })
+
+    total_time = time.time() - start_all
+
+    output = {
+        "generated_at": datetime.now().isoformat(),
+        "suite": suite,
+        "mode": mode,
+        "model": model or "default",
+        "total_tasks": len(results),
+        "total_time_s": round(total_time, 1),
+        "plugin_active": plugin_active,
+        "tasks": results,
+        "summary": {
+            "successful": sum(1 for r in results if r.get("success")),
+            "failed": sum(1 for r in results if not r.get("success")),
+            "total_wall_time_s": round(sum(r.get("wall_time_s", 0) for r in results), 1),
+            "total_tool_calls": sum(r.get("total_tool_calls", 0) for r in results),
+            "total_tokens": sum(r.get("tokens", {}).get("total", 0) for r in results),
+            "total_cache_hits": sum(r.get("cache_hits", 0) for r in results),
+            "total_cache_checks": sum(r.get("cache_checks", 0) for r in results),
+        },
+    }
+
+    filename = f"{suite}_{mode}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_path = RESULTS_DIR / filename
+    with open(output_path, "w") as f:
+        json.dump(output, f, indent=2)
+
+    # Print phase summary
+    s = output["summary"]
+    print(f"\n{'='*60}")
+    print(f"  Phase Complete — {suite_label} / {mode}")
+    print(f"{'='*60}")
+    print(f"  Tasks:      {s['successful']} passed / {s['failed']} failed")
+    print(f"  Wall time:  {s['total_wall_time_s']:.1f}s")
+    print(f"  Tool calls: {s['total_tool_calls']}")
+    print(f"  Tokens:     {s['total_tokens']:,}")
+    if mode == "agentglue" and s["total_cache_checks"] > 0:
+        rate = s["total_cache_hits"] / s["total_cache_checks"]
+        print(f"  Cache hits: {s['total_cache_hits']}/{s['total_cache_checks']} ({rate:.0%})")
+    print(f"  Results saved: {output_path}")
+
+    return output, output_path
+
+
+# ---------------------------------------------------------------------------
+# Compare mode: automatic A/B with plugin toggle
+# ---------------------------------------------------------------------------
+
+def run_compare_mode(args):
+    """Run baseline (plugin disabled) then agentglue (plugin enabled), then compare."""
+    if args.timeout is None:
+        args.timeout = 600 if args.suite == "e2e" else 120
+
+    # Load tasks
+    tasks_file = E2E_TASKS_FILE if args.suite == "e2e" else SIMPLE_TASKS_FILE
+    with open(tasks_file) as f:
+        task_data = json.load(f)
+    all_tasks = task_data["tasks"]
+
+    if args.tasks:
+        selected = set(args.tasks.split(","))
+        tasks = [t for t in all_tasks if t["id"] in selected]
+        if not tasks:
+            print(f"No tasks matched: {args.tasks}")
+            return
+    else:
+        tasks = all_tasks
+
+    suite_label = "E2E Multi-Agent" if args.suite == "e2e" else "Simple (multi-agent)"
+    total_agents = sum(t.get("num_agents", 1) for t in tasks)
+
+    print(f"\n{'='*70}")
+    print(f"  AgentGlue A/B Comparison — {suite_label}")
+    print(f"{'='*70}")
+    print(f"  Tasks: {len(tasks)} | Sub-agents: {total_agents}")
+    print(f"  Timeout: {args.timeout}s per task")
+    print(f"  Plan: disable plugin → run baseline → enable plugin → run agentglue → compare")
+
+    if args.dry_run:
+        print(f"\n  [DRY RUN] Would run {len(tasks)} tasks × 2 phases = {len(tasks)*2} runs")
+        print(f"  Total sub-agents: {total_agents * 2}")
+        return
+
+    # Pre-flight
+    print(f"\nPre-flight checks:")
+
+    if not check_gateway():
+        print("  [FAIL] Gateway not running. Start with: systemctl --user start openclaw-gateway")
+        return
+    print("  [OK] Gateway is running")
+
+    if not is_agentglue_installed():
+        print("  [FAIL] AgentGlue plugin is not installed.")
+        print("         Install with: openclaw plugins install openclaw-agentglue")
+        print("         Then run this command again.")
+        return
+    print("  [OK] AgentGlue plugin is installed")
+
+    # ── Phase 1: Baseline (disable plugin) ──
+    print(f"\n{'='*70}")
+    print(f"  PHASE 1/2: BASELINE (AgentGlue disabled)")
+    print(f"{'='*70}")
+
+    changed = set_agentglue_enabled(False)
+    if changed:
+        print("  Disabled AgentGlue plugin in config")
+        if not restart_gateway():
+            print("  [FAIL] Gateway did not restart. Aborting.")
+            set_agentglue_enabled(True)  # restore
+            return
+    else:
+        print("  AgentGlue already disabled")
+        # Still verify gateway is up without the plugin
+        if check_agentglue_plugin():
+            print("  [WARN] Plugin still appears active — restarting gateway")
+            if not restart_gateway():
+                print("  [FAIL] Gateway did not restart. Aborting.")
+                return
+
+    # Verify plugin is off
+    if check_agentglue_plugin():
+        print("  [WARN] AgentGlue still appears in plugin list — baseline may be tainted")
+
+    baseline_output, baseline_path = run_phase("baseline", args.suite, tasks, args.model, args.timeout)
+
+    # ── Phase 2: AgentGlue (enable plugin) ──
+    print(f"\n{'='*70}")
+    print(f"  PHASE 2/2: AGENTGLUE (enabled)")
+    print(f"{'='*70}")
+
+    changed = set_agentglue_enabled(True)
+    if changed:
+        print("  Enabled AgentGlue plugin in config")
+        if not restart_gateway(wait=15):
+            print("  [FAIL] Gateway did not restart. Aborting.")
+            return
+    else:
+        print("  AgentGlue already enabled")
+
+    # Wait a bit extra for sidecar startup
+    if not check_agentglue_plugin():
+        print("  Waiting for plugin to load...", end="", flush=True)
+        for _ in range(10):
+            time.sleep(1)
+            print(".", end="", flush=True)
+            if check_agentglue_plugin():
+                break
+        print()
+
+    if check_agentglue_plugin():
+        print("  [OK] AgentGlue plugin is active")
+    else:
+        print("  [WARN] AgentGlue plugin not detected — results may not show cache hits")
+
+    agentglue_output, agentglue_path = run_phase("agentglue", args.suite, tasks, args.model, args.timeout)
+
+    # ── Comparison ──
+    print(f"\n{'='*70}")
+    print(f"  COMPARISON REPORT")
+    print(f"{'='*70}")
+
+    compare_results(str(baseline_path), str(agentglue_path))
+
+    # Show cumulative cache curve for simple suite
+    if args.suite == "simple" and len(agentglue_output.get("tasks", [])) > 5:
+        results = agentglue_output["tasks"]
+        print(f"\n  Cache hit rate over time (cumulative):")
+        cum_hits = 0
+        cum_checks = 0
+        milestones = [10, 25, 50, 75, 100]
+        for i, r in enumerate(results, 1):
+            cum_hits += r.get("cache_hits", 0)
+            cum_checks += r.get("cache_checks", 0)
+            if i in milestones or i == len(results):
+                rate = cum_hits / max(cum_checks, 1)
+                print(f"    After {i:>3} tasks: {rate:.0%} ({cum_hits}/{cum_checks})")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -510,22 +790,27 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--suite", choices=["e2e", "simple"], default="e2e", help="Benchmark suite: e2e (30 multi-agent) or simple (100 single-agent)")
-    parser.add_argument("--mode", choices=["baseline", "agentglue"], help="Run mode")
+    parser.add_argument("--suite", choices=["e2e", "simple"], default="e2e", help="Benchmark suite: e2e (30 multi-agent) or simple (100 multi-agent)")
+    parser.add_argument("--mode", choices=["baseline", "agentglue", "compare"], help="Run mode (compare = automatic A/B)")
     parser.add_argument("--tasks", type=str, default="", help="Comma-separated task IDs to run (default: all)")
     parser.add_argument("--model", type=str, default=None, help="Model override (e.g. zai/glm-5)")
     parser.add_argument("--timeout", type=int, default=None, help="Per-task timeout in seconds (default: 600 for e2e, 120 for simple)")
     parser.add_argument("--dry-run", action="store_true", help="Show tasks without executing")
-    parser.add_argument("--compare", nargs=2, metavar=("BASELINE", "AGENTGLUE"), help="Compare two result files")
+    parser.add_argument("--compare", nargs=2, metavar=("BASELINE", "AGENTGLUE"), help="Compare two existing result files")
     args = parser.parse_args()
 
-    # Compare mode
+    # Compare existing result files
     if args.compare:
         compare_results(args.compare[0], args.compare[1])
         return
 
     if not args.mode:
         parser.error("--mode is required (unless using --compare)")
+
+    # Handle --mode compare: run both phases automatically
+    if args.mode == "compare":
+        run_compare_mode(args)
+        return
 
     # Set default timeout based on suite
     if args.timeout is None:
@@ -591,98 +876,24 @@ def main():
         return
     if args.mode == "baseline" and plugin_active:
         print("  [WARN] AgentGlue plugin IS active — baseline results will include cache effects!")
-        print("         Uninstall first: openclaw plugins uninstall openclaw-agentglue")
+        print("         Uninstall first, or use --mode compare for automatic A/B")
         resp = input("  Continue anyway? [y/N] ")
         if resp.lower() != "y":
             return
     status = "active" if plugin_active else "not installed"
     print(f"  [OK] AgentGlue plugin: {status}")
 
-    # Run tasks
-    RESULTS_DIR.mkdir(exist_ok=True)
-    results = []
-    start_all = time.time()
+    # Run phase
+    output, output_path = run_phase(args.mode, args.suite, tasks, args.model, args.timeout)
 
-    for i, task in enumerate(tasks, 1):
-        print(f"\n[{i}/{len(tasks)}]", end="")
-        try:
-            result = run_task(task, args.mode, args.model, args.timeout, suite=args.suite)
-            results.append(result)
-        except KeyboardInterrupt:
-            print("\n\nInterrupted by user. Saving partial results...")
-            break
-        except Exception as e:
-            print(f"  [ERROR] {e}")
-            results.append({
-                "task_id": task["id"],
-                "task_name": task["name"],
-                "mode": args.mode,
-                "success": False,
-                "wall_time_s": 0,
-                "total_tool_calls": 0,
-                "errors": str(e),
-            })
-
-    total_time = time.time() - start_all
-
-    # Save results
-    output = {
-        "generated_at": datetime.now().isoformat(),
-        "suite": args.suite,
-        "mode": args.mode,
-        "model": args.model or "default",
-        "total_tasks": len(results),
-        "total_time_s": round(total_time, 1),
-        "plugin_active": plugin_active,
-        "tasks": results,
-        "summary": {
-            "successful": sum(1 for r in results if r.get("success")),
-            "failed": sum(1 for r in results if not r.get("success")),
-            "total_wall_time_s": round(sum(r.get("wall_time_s", 0) for r in results), 1),
-            "total_tool_calls": sum(r.get("total_tool_calls", 0) for r in results),
-            "total_tokens": sum(r.get("tokens", {}).get("total", 0) for r in results),
-            "total_cache_hits": sum(r.get("cache_hits", 0) for r in results),
-            "total_cache_checks": sum(r.get("cache_checks", 0) for r in results),
-        },
-    }
-
-    filename = f"{args.suite}_{args.mode}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    output_path = RESULTS_DIR / filename
-    with open(output_path, "w") as f:
-        json.dump(output, f, indent=2)
-
-    # Print summary
-    s = output["summary"]
-    print(f"\n{'='*60}")
-    print(f"  Benchmark Complete — {suite_label} / {args.mode}")
-    print(f"{'='*60}")
-    print(f"  Tasks:      {s['successful']} passed / {s['failed']} failed")
-    print(f"  Wall time:  {s['total_wall_time_s']:.1f}s")
-    print(f"  Tool calls: {s['total_tool_calls']}")
-    print(f"  Tokens:     {s['total_tokens']:,}")
-    if args.mode == "agentglue" and s["total_cache_checks"] > 0:
-        rate = s["total_cache_hits"] / s["total_cache_checks"]
-        print(f"  Cache hits: {s['total_cache_hits']}/{s['total_cache_checks']} ({rate:.0%})")
-
-    # For simple suite, show cumulative cache hit curve
-    if args.suite == "simple" and args.mode == "agentglue" and len(results) > 5:
-        print(f"\n  Cache hit rate over time (cumulative):")
-        cum_hits = 0
-        cum_checks = 0
-        milestones = [10, 25, 50, 75, 100]
-        for i, r in enumerate(results, 1):
-            cum_hits += r.get("cache_hits", 0)
-            cum_checks += r.get("cache_checks", 0)
-            if i in milestones or i == len(results):
-                rate = cum_hits / max(cum_checks, 1)
-                print(f"    After {i:>3} tasks: {rate:.0%} ({cum_hits}/{cum_checks})")
-    print(f"\n  Results saved: {output_path}")
+    # Print next step
     print(f"\n  Next step:")
     if args.mode == "baseline":
         print(f"    1. Install AgentGlue: openclaw plugins install openclaw-agentglue")
         print(f"    2. Restart gateway:   systemctl --user restart openclaw-gateway")
         print(f"    3. Run with plugin:   python3 benchmarks/run_benchmark.py --suite {args.suite} --mode agentglue")
         print(f"    4. Compare:           python3 benchmarks/run_benchmark.py --compare {output_path} results/{args.suite}_agentglue_*.json")
+        print(f"\n  Or use --mode compare for automatic A/B in one command.")
     else:
         print(f"    Compare with baseline: python3 benchmarks/run_benchmark.py --compare results/{args.suite}_baseline_*.json {output_path}")
 
