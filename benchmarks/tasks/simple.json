@@ -3,229 +3,87 @@
     "version": "1.0",
     "target_repo": "AgentGlue",
     "target_path": "/home/ubuntu/.openclaw/workspace/projects/AgentGlue",
-    "description": "100 lightweight multi-agent benchmark tasks (2-3 agents each) for AgentGlue coordination and cache evaluation",
-    "design": "10 groups of 10 tasks testing different multi-agent coordination patterns. Each task spawns 2-3 sub-agents with overlapping file reads and searches."
+    "description": "30 lightweight multi-agent benchmark tasks (2-3 agents each) for AgentGlue coordination and cache evaluation",
+    "design": "10 groups of 3 tasks testing different multi-agent coordination patterns. Each task spawns 2-3 sub-agents with overlapping file reads and searches."
   },
   "tasks": [
     {
       "id": "S001",
       "name": "Runtime public API vs private helpers",
       "category": "same-file-different-questions",
-      "description": "2 agents read runtime.py — one lists public methods, the other lists private helpers",
+      "description": "2 agents read runtime.py \u2014 one lists public methods, the other lists private helpers",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all public methods (no leading underscore) with their signatures.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all private/internal methods (leading underscore) with their purpose.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read runtime.py; second agent should get cache hit."
     },
     {
       "id": "S002",
       "name": "Dedup class hierarchy vs error handling",
       "category": "same-file-different-questions",
-      "description": "2 agents read dedup.py — one maps class hierarchy, the other checks error handling",
+      "description": "2 agents read dedup.py \u2014 one maps class hierarchy, the other checks error handling",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and map the class hierarchy (which classes inherit from what).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all try/except blocks and what errors they handle.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read dedup.py."
     },
     {
       "id": "S003",
       "name": "Shared memory read vs write paths",
       "category": "same-file-different-questions",
-      "description": "2 agents read shared_memory.py — one traces read path, the other traces write path",
+      "description": "2 agents read shared_memory.py \u2014 one traces read path, the other traces write path",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and trace the data read path from entry to return.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and trace the data write path from entry to storage.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read shared_memory.py."
-    },
-    {
-      "id": "S004",
-      "name": "Task lock concurrency vs API surface",
-      "category": "same-file-different-questions",
-      "description": "2 agents read task_lock.py — one analyzes concurrency, the other lists the API",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and identify all concurrency primitives (locks, semaphores, events) used.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and list every public method with its parameters and return type.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read task_lock.py."
-    },
-    {
-      "id": "S005",
-      "name": "Allocator resource management vs algorithm",
-      "category": "same-file-different-questions",
-      "description": "2 agents read allocator.py — one checks resource management, the other describes the allocation algorithm",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and identify how resources are acquired and released.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe the allocation algorithm step by step.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read allocator.py."
-    },
-    {
-      "id": "S006",
-      "name": "Events data structures vs dispatch logic",
-      "category": "same-file-different-questions",
-      "description": "2 agents read events.py — one lists data structures, the other describes dispatch",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all data classes, enums, and type aliases defined.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and explain the event dispatch mechanism.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read events.py."
-    },
-    {
-      "id": "S007",
-      "name": "Metrics collection vs reporting",
-      "category": "same-file-different-questions",
-      "description": "2 agents read metrics.py — one analyzes collection, the other analyzes reporting",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and describe how metrics are collected and stored.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and describe how metrics are reported or exported.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read metrics.py."
-    },
-    {
-      "id": "S008",
-      "name": "Recorder storage format vs replay capability",
-      "category": "same-file-different-questions",
-      "description": "2 agents read recorder.py — one checks storage format, the other checks replay",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and describe the storage format used for recorded data.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and determine whether replay/playback capability exists and how it works.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read recorder.py."
-    },
-    {
-      "id": "S009",
-      "name": "Sidecar server endpoints vs middleware chain",
-      "category": "same-file-different-questions",
-      "description": "2 agents read server.py — one lists endpoints, the other traces middleware",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all HTTP endpoints with their methods and paths.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and trace the middleware/handler chain from request to response.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read server.py."
-    },
-    {
-      "id": "S010",
-      "name": "TypeScript plugin hooks vs configuration",
-      "category": "same-file-different-questions",
-      "description": "2 agents read index.ts — one lists hooks, the other lists config options",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all hook/callback registration points.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all configuration options and their defaults.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read index.ts."
     },
     {
       "id": "S011",
       "name": "Search 'async' in middleware vs full src",
       "category": "same-search-different-scopes",
-      "description": "2 agents search for 'async' — one in middleware/, one in all of src/",
+      "description": "2 agents search for 'async' \u2014 one in middleware/, one in all of src/",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for the pattern 'async' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and count occurrences per file.\n- Agent 2: Search for the pattern 'async' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ and count occurrences per file.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
+      "overlap_tools": [
+        "grep"
+      ],
       "notes": "middleware/ is inside src/agentglue/, so agent 2's search is a superset of agent 1's."
     },
     {
       "id": "S012",
       "name": "Search 'import' in core vs full src",
       "category": "same-search-different-scopes",
-      "description": "2 agents search for 'import' — one in core/, one in all of src/",
+      "description": "2 agents search for 'import' \u2014 one in core/, one in all of src/",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'import' statements in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and list all external dependencies.\n- Agent 2: Search for 'import' statements in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ and list all external dependencies.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
+      "overlap_tools": [
+        "grep"
+      ],
       "notes": "core/ is inside src/agentglue/, so results overlap."
     },
     {
       "id": "S013",
       "name": "Search 'sqlite' in middleware vs full repo",
       "category": "same-search-different-scopes",
-      "description": "2 agents search for 'sqlite' — one in middleware/, one in full repo",
+      "description": "2 agents search for 'sqlite' \u2014 one in middleware/, one in full repo",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'sqlite' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and list all SQLite-related code.\n- Agent 2: Search for 'sqlite' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list all SQLite-related code.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
+      "overlap_tools": [
+        "grep"
+      ],
       "notes": "middleware/ is a subset of the full repo."
-    },
-    {
-      "id": "S014",
-      "name": "Search 'cache' in middleware vs tests",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for 'cache' — one in middleware/, one in tests/",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'cache' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and describe all caching logic found.\n- Agent 2: Search for 'cache' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and describe all cache-related test cases.\nReport combined findings.",
-      "overlap_tools": ["grep"],
-      "notes": "Different dirs but same pattern; some file reads may overlap if agents cross-reference."
-    },
-    {
-      "id": "S015",
-      "name": "Search 'lock' in core vs full src",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for 'lock' — one in core/, one in all of src/",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'lock' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and identify all locking mechanisms.\n- Agent 2: Search for 'lock' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ and identify all locking mechanisms.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
-      "notes": "core/ is a subset of src/agentglue/."
-    },
-    {
-      "id": "S016",
-      "name": "Search 'error' in sidecar vs full repo",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for 'error' — one in sidecar/, one in full repo",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'error' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/ and list all error handling patterns.\n- Agent 2: Search for 'error' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list all error handling patterns.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
-      "notes": "sidecar/ is a subset of the full repo."
-    },
-    {
-      "id": "S017",
-      "name": "Search 'timeout' in middleware vs full src",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for 'timeout' — one in middleware/, one in all of src/",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'timeout' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and describe each timeout usage.\n- Agent 2: Search for 'timeout' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/ and describe each timeout usage.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
-      "notes": "middleware/ is inside src/agentglue/."
-    },
-    {
-      "id": "S018",
-      "name": "Search 'class' in core vs middleware",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for 'class' — one in core/, one in middleware/",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'class ' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and list all class definitions.\n- Agent 2: Search for 'class ' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and list all class definitions.\nReport combined findings.",
-      "overlap_tools": ["grep"],
-      "notes": "Different subdirs of the same parent; no file overlap but pattern is identical."
-    },
-    {
-      "id": "S019",
-      "name": "Search 'def ' in tests vs full repo",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for function definitions — one in tests/, one in full repo",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'def ' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and count functions per test file.\n- Agent 2: Search for 'def ' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and count functions per file.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
-      "notes": "tests/ is a subset of the full repo."
-    },
-    {
-      "id": "S020",
-      "name": "Search 'TODO' in src vs full repo",
-      "category": "same-search-different-scopes",
-      "description": "2 agents search for TODO comments — one in src/, one in full repo",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'TODO' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ and list all TODO items with context.\n- Agent 2: Search for 'TODO' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list all TODO items with context.\nReport combined findings noting the overlap.",
-      "overlap_tools": ["grep"],
-      "notes": "src/ is a subset of the full repo."
     },
     {
       "id": "S021",
@@ -235,7 +93,9 @@
       "num_agents": 3,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and summarize its purpose in 2 sentences.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and summarize its purpose in 2 sentences.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and summarize its purpose in 2 sentences.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Different files in same module; agents may read __init__.py as common import."
     },
     {
@@ -246,7 +106,9 @@
       "num_agents": 3,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and list its main class and methods.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list its main class and methods.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list its main class and methods.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Different files in core/ module; agents may share __init__.py reads."
     },
     {
@@ -257,305 +119,88 @@
       "num_agents": 3,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and describe what data it records.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and describe the event types it defines.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe the allocation strategy.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Three core files; likely shared imports."
     },
     {
-      "id": "S024",
-      "name": "Parallel read of runtime, dedup, shared_memory",
-      "category": "parallel-file-reads",
-      "description": "3 agents read files across runtime and middleware",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and count how many middleware references it makes.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all external imports.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and list all external imports.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Runtime + middleware files; agents may cross-reference shared types."
-    },
-    {
-      "id": "S025",
-      "name": "Parallel read of sidecar, index.ts, runtime",
-      "category": "parallel-file-reads",
-      "description": "3 agents read the three main entry points",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and describe its main entry point.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and describe its main entry point.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and describe its main entry point.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Three entry point files across Python and TypeScript."
-    },
-    {
-      "id": "S026",
-      "name": "Parallel read of metrics, recorder, events for data flow",
-      "category": "parallel-file-reads",
-      "description": "3 agents trace data flow through core observability files",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list all metric names or keys.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and list all recorded event types.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all event enum values.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Three observability files that likely share event type definitions."
-    },
-    {
-      "id": "S027",
-      "name": "Parallel read of dedup, task_lock, allocator for resource patterns",
-      "category": "parallel-file-reads",
-      "description": "3 agents look for resource management patterns in different files",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and describe how it manages cache resources (open, close, cleanup).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and describe how it manages lock resources.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe how it manages allocated resources.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Three files with resource management patterns."
-    },
-    {
-      "id": "S028",
-      "name": "Parallel read of config files",
-      "category": "parallel-file-reads",
-      "description": "3 agents read the three config/manifest files",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and list all declared dependencies.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and list all declared dependencies.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and list all mentioned dependencies.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Three config/doc files in the same repo."
-    },
-    {
-      "id": "S029",
-      "name": "Parallel read of two test files and runtime",
-      "category": "parallel-file-reads",
-      "description": "3 agents read test and source files",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and count the number of test functions.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py and count the number of test functions.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and count the number of public functions.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Tests + runtime; agents may read shared fixtures or imports."
-    },
-    {
-      "id": "S030",
-      "name": "Parallel read of server, dedup, events",
-      "category": "parallel-file-reads",
-      "description": "3 agents read files spanning sidecar, middleware, and core",
-      "num_agents": 3,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all imported modules.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all imported modules.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all imported modules.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Three files from different layers."
-    },
-    {
       "id": "S031",
-      "name": "Runtime imports dedup — interface check",
+      "name": "Runtime imports dedup \u2014 interface check",
       "category": "cross-reference-check",
       "description": "2 agents check that runtime.py and dedup.py agree on interfaces",
       "num_agents": 2,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list every call it makes into the dedup middleware, noting the arguments passed.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list the signature of every public method.\nReport whether the call sites match the signatures.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Agents may both read runtime.py or dedup.py to cross-reference."
     },
     {
       "id": "S032",
-      "name": "Runtime imports shared_memory — interface check",
+      "name": "Runtime imports shared_memory \u2014 interface check",
       "category": "cross-reference-check",
       "description": "2 agents check that runtime.py and shared_memory.py agree on interfaces",
       "num_agents": 2,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list every call it makes into shared_memory, noting arguments.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and list the signature of every public method.\nReport whether the call sites match the signatures.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Cross-reference between runtime and shared_memory."
     },
     {
       "id": "S033",
-      "name": "Runtime imports task_lock — interface check",
+      "name": "Runtime imports task_lock \u2014 interface check",
       "category": "cross-reference-check",
       "description": "2 agents check that runtime.py and task_lock.py agree on interfaces",
       "num_agents": 2,
       "expected_overlap": "medium",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list every call it makes to task_lock functionality, noting arguments.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and list every public method signature.\nReport whether the call sites match the signatures.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Cross-reference between runtime and task_lock."
-    },
-    {
-      "id": "S034",
-      "name": "Events used by recorder — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that events.py and recorder.py agree on event types",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all event type names/enums defined.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and list all event type names it references.\nReport whether recorder references any event types not defined in events.py.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between events and recorder."
-    },
-    {
-      "id": "S035",
-      "name": "Metrics used by runtime — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that metrics.py and runtime.py agree on metric keys",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list all metric keys or names it defines.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all metric keys or names it emits.\nReport whether runtime emits any metrics not defined in metrics.py.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between metrics and runtime."
-    },
-    {
-      "id": "S036",
-      "name": "Allocator used by runtime — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that allocator.py and runtime.py agree on allocation calls",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and list all public allocation/deallocation methods.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all allocator method calls made.\nReport whether the runtime calls match the allocator's interface.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between allocator and runtime."
-    },
-    {
-      "id": "S037",
-      "name": "Sidecar server uses runtime — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that server.py and runtime.py agree on API",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all calls to the Python runtime/agentglue library.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all public methods that could be called by external code.\nReport whether server.py calls match runtime.py's public API.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between sidecar server and runtime."
-    },
-    {
-      "id": "S038",
-      "name": "Dedup references shared_memory — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that dedup.py and shared_memory.py agree on storage interface",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and identify any calls or references to shared_memory functionality.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and list all public methods available for other middleware to use.\nReport whether dedup's references are consistent with shared_memory's API.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between two middleware files."
-    },
-    {
-      "id": "S039",
-      "name": "TypeScript index.ts calls sidecar — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that index.ts and server.py agree on the HTTP API contract",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all HTTP requests it makes to the sidecar (URL paths, methods, payloads).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all HTTP endpoints it exposes (paths, methods, expected payloads).\nReport whether the client calls match the server endpoints.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between TypeScript client and Python server."
-    },
-    {
-      "id": "S040",
-      "name": "Events used by metrics — consistency check",
-      "category": "cross-reference-check",
-      "description": "2 agents check that events.py and metrics.py agree on event-metric mapping",
-      "num_agents": 2,
-      "expected_overlap": "medium",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all event types that should trigger metric updates.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list all events it subscribes to or handles.\nReport whether every event that should trigger a metric is actually handled.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between events and metrics."
     },
     {
       "id": "S041",
       "name": "Dedup security vs performance review",
       "category": "duplicate-review",
-      "description": "2 agents review dedup.py — one for security, one for performance",
+      "description": "2 agents review dedup.py \u2014 one for security, one for performance",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and review it for security issues (SQL injection, path traversal, unsafe deserialization).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and review it for performance issues (unnecessary copies, O(n^2) loops, blocking I/O).\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read the same file from different angles."
     },
     {
       "id": "S042",
       "name": "Shared memory security vs performance review",
       "category": "duplicate-review",
-      "description": "2 agents review shared_memory.py — one for security, one for performance",
+      "description": "2 agents review shared_memory.py \u2014 one for security, one for performance",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and review for security issues (race conditions, data leaks, unauthorized access).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and review for performance issues (memory waste, slow lookups, excessive locking).\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read shared_memory.py."
     },
     {
       "id": "S043",
       "name": "Task lock security vs performance review",
       "category": "duplicate-review",
-      "description": "2 agents review task_lock.py — one for security, one for performance",
+      "description": "2 agents review task_lock.py \u2014 one for security, one for performance",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and review for security issues (deadlocks, lock starvation, privilege escalation).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and review for performance issues (contention, unnecessary lock scope, blocking waits).\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read task_lock.py."
-    },
-    {
-      "id": "S044",
-      "name": "Runtime security vs maintainability review",
-      "category": "duplicate-review",
-      "description": "2 agents review runtime.py — one for security, one for maintainability",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and review for security issues (input validation, injection, unsafe defaults).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and review for maintainability (code complexity, long methods, unclear naming).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read runtime.py."
-    },
-    {
-      "id": "S045",
-      "name": "Sidecar server security vs reliability review",
-      "category": "duplicate-review",
-      "description": "2 agents review server.py — one for security, one for reliability",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and review for security (auth bypass, injection, SSRF).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and review for reliability (error recovery, graceful shutdown, connection handling).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read server.py."
-    },
-    {
-      "id": "S046",
-      "name": "Allocator correctness vs performance review",
-      "category": "duplicate-review",
-      "description": "2 agents review allocator.py — one for correctness, one for performance",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and review for correctness bugs (off-by-one, null handling, boundary conditions).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and review for performance (allocation speed, memory fragmentation, scalability).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read allocator.py."
-    },
-    {
-      "id": "S047",
-      "name": "Events correctness vs extensibility review",
-      "category": "duplicate-review",
-      "description": "2 agents review events.py — one for correctness, one for extensibility",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and review for correctness (missing event types, ordering issues, serialization bugs).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and review for extensibility (how easy to add new events, plugin support, versioning).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read events.py."
-    },
-    {
-      "id": "S048",
-      "name": "TypeScript index.ts security vs code quality review",
-      "category": "duplicate-review",
-      "description": "2 agents review index.ts — one for security, one for code quality",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and review for security (command injection, XSS, insecure HTTP).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and review for code quality (type safety, error handling, async patterns).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read index.ts."
-    },
-    {
-      "id": "S049",
-      "name": "Metrics thread-safety vs accuracy review",
-      "category": "duplicate-review",
-      "description": "2 agents review metrics.py — one for thread-safety, one for accuracy",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and review for thread-safety (atomic counters, lock usage, concurrent access).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and review for accuracy (counter overflow, rounding errors, lost updates).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read metrics.py."
-    },
-    {
-      "id": "S050",
-      "name": "Recorder completeness vs privacy review",
-      "category": "duplicate-review",
-      "description": "2 agents review recorder.py — one for completeness, one for privacy",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and review for completeness (are all important events recorded, any gaps).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and review for privacy (does it record sensitive data, PII exposure, log sanitization).\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read recorder.py."
     },
     {
       "id": "S051",
@@ -565,7 +210,10 @@
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'async def' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and list all async functions found.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all function definitions.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
+      "overlap_tools": [
+        "grep",
+        "read"
+      ],
       "notes": "Agent 1's search will read dedup.py (among others), overlapping with agent 2's direct read."
     },
     {
@@ -576,7 +224,10 @@
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'class ' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and list all classes found.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe its class hierarchy.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
+      "overlap_tools": [
+        "grep",
+        "read"
+      ],
       "notes": "Search results will include allocator.py, overlapping with the direct read."
     },
     {
@@ -587,525 +238,168 @@
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'from agentglue' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ and map the internal import graph.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all its import statements.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
+      "overlap_tools": [
+        "grep",
+        "read"
+      ],
       "notes": "Search will read runtime.py as part of results."
     },
     {
-      "id": "S054",
-      "name": "Search sqlite in repo, then read test_sqlite_backend",
-      "category": "search-then-read",
-      "description": "One agent searches for sqlite patterns, one reads the sqlite test file",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'sqlite' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/ and list all files containing SQLite references.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py and summarize what it tests.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include test_sqlite_backend.py."
-    },
-    {
-      "id": "S055",
-      "name": "Search lock in middleware, then read task_lock",
-      "category": "search-then-read",
-      "description": "One agent searches for lock patterns, one reads task_lock.py directly",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'lock' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/ and list all locking-related code.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and describe the locking implementation.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include task_lock.py content."
-    },
-    {
-      "id": "S056",
-      "name": "Search event in core, then read events.py",
-      "category": "search-then-read",
-      "description": "One agent searches for event patterns, one reads events.py directly",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'event' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and count occurrences per file.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all event-related definitions.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include events.py."
-    },
-    {
-      "id": "S057",
-      "name": "Search metric in src, then read metrics.py",
-      "category": "search-then-read",
-      "description": "One agent searches for metric patterns, one reads metrics.py",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'metric' (case-insensitive) in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/ and list all metric-related code.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and describe the metrics collection API.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include metrics.py."
-    },
-    {
-      "id": "S058",
-      "name": "Search record in core, then read recorder.py",
-      "category": "search-then-read",
-      "description": "One agent searches for record patterns, one reads recorder.py",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'record' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/ and list all recording-related code.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and describe its public API.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include recorder.py."
-    },
-    {
-      "id": "S059",
-      "name": "Search fetch in TS src, then read index.ts",
-      "category": "search-then-read",
-      "description": "One agent searches for fetch/HTTP calls, one reads index.ts",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'fetch' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/ and list all HTTP call sites.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and describe how it communicates with the sidecar.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include index.ts."
-    },
-    {
-      "id": "S060",
-      "name": "Search test_ in tests, then read test_sidecar_benchmark",
-      "category": "search-then-read",
-      "description": "One agent searches for test functions, one reads a specific test file",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Search for 'def test_' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all test function names.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and describe the benchmark scenarios it tests.\nReport combined findings.",
-      "overlap_tools": ["grep", "read"],
-      "notes": "Search results will include test_sidecar_benchmark.py."
-    },
-    {
       "id": "S061",
-      "name": "Summarize middleware module — 3 agents",
+      "name": "Summarize middleware module \u2014 3 agents",
       "category": "multi-file-summary",
       "description": "3 agents each summarize one middleware file, all reading the module's __init__.py",
       "num_agents": 3,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and summarize the dedup middleware's role. Also read the middleware __init__.py if it exists.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and summarize the shared memory middleware's role. Also read the middleware __init__.py if it exists.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and summarize the task lock middleware's role. Also read the middleware __init__.py if it exists.\nReport combined findings as a unified middleware overview.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "All 3 agents read __init__.py as common entry; high overlap on that file."
     },
     {
       "id": "S062",
-      "name": "Summarize core module — 3 agents",
+      "name": "Summarize core module \u2014 3 agents",
       "category": "multi-file-summary",
       "description": "3 agents each summarize one core file, all reading the module's __init__.py",
       "num_agents": 3,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and summarize the allocator's role. Also read the core __init__.py if it exists.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and summarize the event system's role. Also read the core __init__.py if it exists.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and summarize the metrics system's role. Also read the core __init__.py if it exists.\nReport combined findings as a unified core module overview.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "All 3 agents read core __init__.py."
     },
     {
       "id": "S063",
-      "name": "Summarize core observability — recorder, metrics, events",
+      "name": "Summarize core observability \u2014 recorder, metrics, events",
       "category": "multi-file-summary",
       "description": "3 agents summarize observability files with shared __init__.py",
       "num_agents": 3,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and explain how recording integrates with the core module. Also read the core __init__.py.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and explain how metrics integrate with the core module. Also read the core __init__.py.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and explain how events integrate with the core module. Also read the core __init__.py.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "All 3 agents read core __init__.py; overlap on shared types."
     },
     {
-      "id": "S064",
-      "name": "Summarize project entry points — runtime, server, index.ts",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize entry points, all reading the top-level __init__.py",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and summarize the Python runtime entry point. Also read the package __init__.py.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and summarize the sidecar entry point. Also read the package __init__.py.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and summarize the TypeScript plugin entry point.\nReport combined findings as a unified architecture overview.",
-      "overlap_tools": ["read"],
-      "notes": "Agents 1 and 2 both read __init__.py."
-    },
-    {
-      "id": "S065",
-      "name": "Summarize middleware with runtime context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize middleware files, all also reading runtime.py for context",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and describe how runtime.py uses it. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and describe how runtime.py uses it. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and describe how runtime.py uses it. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read runtime.py as shared context — high overlap."
-    },
-    {
-      "id": "S066",
-      "name": "Summarize core with runtime context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize core files, all also reading runtime.py for context",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe how runtime.py uses the allocator. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and describe how runtime.py uses events. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and describe how runtime.py uses metrics. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read runtime.py as shared context — high overlap."
-    },
-    {
-      "id": "S067",
-      "name": "Summarize test files with shared fixture context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize test and source files, reading conftest or shared fixtures",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and summarize its test strategy. Also check for a conftest.py in the tests/ directory.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py and summarize its test strategy. Also check for a conftest.py in the tests/ directory.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list the public APIs that tests should cover. Also check for a conftest.py in the tests/ directory.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents may read conftest.py."
-    },
-    {
-      "id": "S068",
-      "name": "Summarize config files with README context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize config files, all also reading README.md",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and summarize Python project config. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md for context.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and summarize TS project config. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md for context.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and summarize the overall project description and setup instructions.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read README.md — high overlap."
-    },
-    {
-      "id": "S069",
-      "name": "Summarize middleware error handling with events context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize error handling, all reading events.py for event types",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and describe its error handling. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py for error event types.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and describe its error handling. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py for error event types.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and describe its error handling. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py for error event types.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read events.py — high overlap."
-    },
-    {
-      "id": "S070",
-      "name": "Summarize middleware data models with shared_memory context",
-      "category": "multi-file-summary",
-      "description": "3 agents summarize data models, all reading shared_memory.py",
-      "num_agents": 3,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and describe the data models it uses. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py for shared data structures.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and describe the data models it uses. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py for shared data structures.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and describe the data models it uses. Also read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py for shared data structures.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read shared_memory.py — high overlap."
-    },
-    {
       "id": "S071",
-      "name": "Test vs source — dedup middleware",
+      "name": "Test vs source \u2014 dedup middleware",
       "category": "test-vs-source",
       "description": "2 agents: one reads dedup source, one reads tests; both understand dedup module",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all public methods that should be tested.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py and list all test functions and what dedup behavior they verify.\nReport whether all public methods have test coverage.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents need to understand dedup; agent 2 may read dedup.py too."
     },
     {
       "id": "S072",
-      "name": "Test vs source — sidecar server",
+      "name": "Test vs source \u2014 sidecar server",
       "category": "test-vs-source",
       "description": "2 agents: one reads server source, one reads sidecar benchmark tests",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and list all endpoints that should be tested.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and list all test functions and what server behavior they verify.\nReport whether all endpoints have test coverage.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents need to understand the sidecar server."
     },
     {
       "id": "S073",
-      "name": "Test vs source — runtime module",
+      "name": "Test vs source \u2014 runtime module",
       "category": "test-vs-source",
       "description": "2 agents: one reads runtime source, one searches for runtime tests",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all public methods that need tests.\n- Agent 2: Search for 'runtime' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and identify which runtime methods are tested.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
+      "overlap_tools": [
+        "read",
+        "grep"
+      ],
       "notes": "Agent 2 may need to read runtime.py to understand what it's looking for."
     },
     {
-      "id": "S074",
-      "name": "Test vs source — allocator",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads allocator source, one searches for allocator tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py and list all public methods.\n- Agent 2: Search for 'allocat' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all allocator-related tests.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may need to read allocator.py for context."
-    },
-    {
-      "id": "S075",
-      "name": "Test vs source — events module",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads events source, one searches for event tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py and list all event types defined.\n- Agent 2: Search for 'event' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all event-related test cases.\nReport whether all event types have tests.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read events.py for cross-reference."
-    },
-    {
-      "id": "S076",
-      "name": "Test vs source — shared memory",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads shared_memory source, one searches for memory tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py and list all public methods.\n- Agent 2: Search for 'shared_memory\\|SharedMemory' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all shared memory tests.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read shared_memory.py for context."
-    },
-    {
-      "id": "S077",
-      "name": "Test vs source — task lock",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads task_lock source, one searches for lock tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py and list all public methods.\n- Agent 2: Search for 'task_lock\\|TaskLock' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all task lock tests.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read task_lock.py for context."
-    },
-    {
-      "id": "S078",
-      "name": "Test vs source — metrics",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads metrics source, one searches for metrics tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py and list all metric collection methods.\n- Agent 2: Search for 'metric' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all metrics-related tests.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read metrics.py for context."
-    },
-    {
-      "id": "S079",
-      "name": "Test vs source — recorder",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads recorder source, one searches for recorder tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py and list all public methods.\n- Agent 2: Search for 'record' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/ and list all recorder-related tests.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read recorder.py for context."
-    },
-    {
-      "id": "S080",
-      "name": "Test vs source — TypeScript plugin",
-      "category": "test-vs-source",
-      "description": "2 agents: one reads TS plugin source, one searches for TS tests",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all exported functions and classes.\n- Agent 2: Search for 'test\\|describe\\|it(' in /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/ and list all TypeScript test cases.\nReport coverage gaps.",
-      "overlap_tools": ["read", "grep"],
-      "notes": "Agent 2 may read index.ts for context."
-    },
-    {
       "id": "S081",
-      "name": "Config + code — pyproject.toml vs runtime imports",
+      "name": "Config + code \u2014 pyproject.toml vs runtime imports",
       "category": "config-plus-code",
       "description": "2 agents: one reads pyproject.toml deps, one reads runtime.py imports",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and list all declared dependencies.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all third-party imports.\nReport whether all imported packages are declared in pyproject.toml.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents need to understand dependencies; may cross-read each other's file."
     },
     {
       "id": "S082",
-      "name": "Config + code — package.json vs index.ts imports",
+      "name": "Config + code \u2014 package.json vs index.ts imports",
       "category": "config-plus-code",
       "description": "2 agents: one reads package.json deps, one reads index.ts imports",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and list all declared dependencies.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all import/require statements.\nReport whether all imported packages are declared in package.json.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents share dependency context."
     },
     {
       "id": "S083",
-      "name": "Config + code — pyproject.toml version vs README version",
+      "name": "Config + code \u2014 pyproject.toml version vs README version",
       "category": "config-plus-code",
       "description": "2 agents: one reads pyproject.toml for version, one reads README for version mentions",
       "num_agents": 2,
       "expected_overlap": "high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and find the project version and Python version requirements.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and find any version numbers or compatibility claims mentioned.\nReport whether version info is consistent.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents analyze version-related information."
     },
     {
-      "id": "S084",
-      "name": "Config + code — pyproject.toml entry points vs runtime exports",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads config for entry points, one reads code for exports",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and list any entry points, scripts, or console_scripts configured.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and identify the main entry point function and any CLI-related code.\nReport whether the config entry points match the code.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between config and code entry points."
-    },
-    {
-      "id": "S085",
-      "name": "Config + code — package.json scripts vs server startup",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads package.json scripts, one reads server.py startup",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and list all npm scripts defined.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and describe the server startup sequence.\nReport whether package.json scripts correctly start the server.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between npm scripts and Python server startup."
-    },
-    {
-      "id": "S086",
-      "name": "Config + code — pyproject.toml test config vs test files",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads pyproject.toml test config, one reads actual test files",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and extract any test configuration (pytest settings, test paths, markers).\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py and check if the test uses any markers or fixtures referenced in config.\nReport consistency.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between test config and test code."
-    },
-    {
-      "id": "S087",
-      "name": "Config + code — README setup instructions vs actual structure",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads README setup steps, one reads runtime for actual setup",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and extract all setup/installation instructions.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and identify what configuration or initialization is actually needed.\nReport whether README instructions match the actual code requirements.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between documentation and code reality."
-    },
-    {
-      "id": "S088",
-      "name": "Config + code — pyproject.toml deps vs dedup imports",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads pyproject.toml, one reads dedup.py for dependency usage",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml and list all declared dependencies with version constraints.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and list all import statements, noting which are third-party.\nReport whether dedup.py uses any undeclared dependencies.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between config deps and code imports."
-    },
-    {
-      "id": "S089",
-      "name": "Config + code — package.json types vs index.ts exports",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads package.json for type/main fields, one reads index.ts for exports",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json and identify the main, types, and exports fields.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts and list all exported symbols.\nReport whether package.json correctly points to the exports in index.ts.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between TS config and TS exports."
-    },
-    {
-      "id": "S090",
-      "name": "Config + code — README features vs runtime capabilities",
-      "category": "config-plus-code",
-      "description": "2 agents: one reads README features, one reads runtime for actual capabilities",
-      "num_agents": 2,
-      "expected_overlap": "high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md and list all features or capabilities claimed.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all actual capabilities implemented.\nReport whether the README accurately represents the codebase.",
-      "overlap_tools": ["read"],
-      "notes": "Cross-reference between docs and code."
-    },
-    {
       "id": "S091",
-      "name": "Full overlap — runtime.py three questions",
+      "name": "Full overlap \u2014 runtime.py three questions",
       "category": "full-overlap-stress",
       "description": "3 agents all read runtime.py and answer different questions",
       "num_agents": 3,
       "expected_overlap": "very-high",
       "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and count the total lines of code, classes, and functions.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and list all decorator usages.\n- Agent 3: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and identify all global variables and module-level constants.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read the exact same file — maximum cache hit potential."
+      "overlap_tools": [
+        "read"
+      ],
+      "notes": "All 3 agents read the exact same file \u2014 maximum cache hit potential."
     },
     {
       "id": "S092",
-      "name": "Full overlap — dedup.py + shared_memory.py two questions",
+      "name": "Full overlap \u2014 dedup.py + shared_memory.py two questions",
       "category": "full-overlap-stress",
       "description": "2 agents both read dedup.py and shared_memory.py, different analyses",
       "num_agents": 2,
       "expected_overlap": "very-high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Describe how data flows between them.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py. Identify any potential race conditions between them.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read the exact same 2 files."
     },
     {
       "id": "S093",
-      "name": "Full overlap — server.py + index.ts two questions",
+      "name": "Full overlap \u2014 server.py + index.ts two questions",
       "category": "full-overlap-stress",
       "description": "2 agents both read server.py and index.ts, different analyses",
       "num_agents": 2,
       "expected_overlap": "very-high",
       "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Describe the communication protocol between them.\n- Agent 2: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Identify any error handling gaps in their interaction.\nReport combined findings.",
-      "overlap_tools": ["read"],
+      "overlap_tools": [
+        "read"
+      ],
       "notes": "Both agents read the exact same 2 files."
-    },
-    {
-      "id": "S094",
-      "name": "Full overlap — three core files, three agents",
-      "category": "full-overlap-stress",
-      "description": "3 agents all read allocator.py, events.py, and metrics.py",
-      "num_agents": 3,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/allocator.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py. Describe the data flow between these three modules.\n- Agent 2: Read the same three files. Identify any circular dependencies.\n- Agent 3: Read the same three files. List all shared type definitions or constants.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read the exact same 3 files — maximum overlap."
-    },
-    {
-      "id": "S095",
-      "name": "Full overlap — runtime + dedup, three agents",
-      "category": "full-overlap-stress",
-      "description": "3 agents all read runtime.py and dedup.py",
-      "num_agents": 3,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py. Count the combined number of functions.\n- Agent 2: Read the same two files. List all exception types raised or caught.\n- Agent 3: Read the same two files. Identify all logging statements and their log levels.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read the exact same 2 files."
-    },
-    {
-      "id": "S096",
-      "name": "Full overlap — pyproject.toml + package.json + README",
-      "category": "full-overlap-stress",
-      "description": "2 agents both read all three config/doc files",
-      "num_agents": 2,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/pyproject.toml, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/package.json, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/README.md. Compare the project descriptions across all three.\n- Agent 2: Read the same three files. Check if version numbers and dependency lists are consistent across all three.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read the exact same 3 files."
-    },
-    {
-      "id": "S097",
-      "name": "Full overlap — middleware trio, two agents",
-      "category": "full-overlap-stress",
-      "description": "2 agents both read all three middleware files",
-      "num_agents": 2,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/dedup.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/shared_memory.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/middleware/task_lock.py. Describe the middleware execution order and pipeline.\n- Agent 2: Read the same three files. Identify all shared state or singletons across middleware components.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read the exact same 3 middleware files."
-    },
-    {
-      "id": "S098",
-      "name": "Full overlap — test files + runtime, two agents",
-      "category": "full-overlap-stress",
-      "description": "2 agents both read both test files and runtime.py",
-      "num_agents": 2,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sidecar_benchmark.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/tests/test_sqlite_backend.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py. Assess overall test coverage quality.\n- Agent 2: Read the same three files. Identify missing edge case tests.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read the exact same 3 files."
-    },
-    {
-      "id": "S099",
-      "name": "Full overlap — events + recorder + metrics, two agents",
-      "category": "full-overlap-stress",
-      "description": "2 agents both read all three observability files",
-      "num_agents": 2,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 2 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/events.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/recorder.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/core/metrics.py. Describe the observability architecture.\n- Agent 2: Read the same three files. Identify gaps where events are defined but not recorded or measured.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "Both agents read the exact same 3 observability files."
-    },
-    {
-      "id": "S100",
-      "name": "Full overlap — runtime + server + index.ts, three agents",
-      "category": "full-overlap-stress",
-      "description": "3 agents all read the three main entry point files",
-      "num_agents": 3,
-      "expected_overlap": "very-high",
-      "prompt": "Spawn exactly 3 sub-agents in parallel:\n- Agent 1: Read /home/ubuntu/.openclaw/workspace/projects/AgentGlue/src/agentglue/runtime.py, /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/sidecar/server.py, and /home/ubuntu/.openclaw/workspace/projects/AgentGlue/openclaw-agentglue/src/index.ts. Describe the end-to-end request flow from TS plugin through sidecar to Python runtime.\n- Agent 2: Read the same three files. Identify all serialization/deserialization points and potential data loss.\n- Agent 3: Read the same three files. List all configuration knobs and their defaults across the three entry points.\nReport combined findings.",
-      "overlap_tools": ["read"],
-      "notes": "All 3 agents read the exact same 3 entry point files — maximum overlap stress test."
     }
   ]
 }
