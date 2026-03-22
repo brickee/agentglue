@@ -1,26 +1,36 @@
 /**
- * OpenClaw AgentGlue Plugin v0.3.0
+ * OpenClaw AgentGlue Plugin v0.4.0
  *
  * Cross-process dedup cache for multi-agent tool calls.
  *
  * Architecture:
- *  - after_tool_call hook auto-caches ALL read-only tool results to SQLite via sidecar
- *  - Smart proxy tools (agentglue_read, agentglue_search, etc.) check cache first
+ *  - Shadows built-in read/grep/glob tools with cache-aware versions
+ *  - Cache check → sidecar execution → Node.js fallback (graceful degradation)
+ *  - after_tool_call hook auto-caches other read-only tool results
  *  - Single sidecar process shared by all agents/sub-agents
  */
 
 import * as http from 'http';
-import { spawn, ChildProcess } from 'child_process';
+import * as fs from 'fs';
+import { spawn, ChildProcess, execSync } from 'child_process';
 import * as path from 'path';
 
-// Tools that should never be cached (side-effectful)
+// Sidecar tool name for each shadowed built-in
+const SIDECAR_TOOL: Record<string, string> = {
+  read: 'deduped_read_file',
+  grep: 'deduped_search',
+  glob: 'deduped_list_files',
+};
+
+// Tools that should never be cached (side-effectful or handled by us)
 const SKIP_TOOLS = new Set([
   'edit', 'write', 'bash', 'exec', 'send_message', 'deliver',
   'send_telegram', 'send_whatsapp', 'send_discord',
   'notebook_edit', 'task_create', 'task_update',
   'agentglue_metrics', 'agentglue_health',
-  // Also skip caching our own proxy tools to avoid recursive caching
-  'agentglue_cached_read', 'agentglue_cached_search', 'agentglue_cached_list',
+  // Our shadow tools — caching is handled inside their execute(),
+  // so after_tool_call must not double-cache them.
+  'read', 'grep', 'glob',
 ]);
 
 interface SidecarConfig {
@@ -279,7 +289,7 @@ interface PluginApi {
 const agentGluePlugin = {
   id: 'openclaw-agentglue',
   name: 'AgentGlue',
-  version: '0.3.0',
+  version: '0.4.0',
   description: 'Cross-process dedup cache for multi-agent tool calls via SQLite sidecar',
 
   register(api: PluginApi) {
@@ -318,26 +328,72 @@ const agentGluePlugin = {
       }
     });
 
-    // -- Proxy tools that check cache first --
-    const makeCachedTool = (toolName: string, description: string, paramsDef: any) => ({
-      name: `agentglue_cached_${toolName}`,
-      description: `[AgentGlue] ${description} — checks cross-agent cache first, falls back to sidecar execution.`,
+    // -- Node.js fallbacks (used when sidecar is down) --
+    const nodeFallback: Record<string, (params: Record<string, unknown>) => string> = {
+      read: (params) => {
+        const filePath = String(params.file_path || '');
+        const offset = Number(params.offset || 1);
+        const limit = Number(params.limit || 200);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const lines = content.split('\n');
+        const start = Math.max(0, offset - 1);
+        return lines.slice(start, start + limit).map((l, i) => `${String(start + i + 1).padStart(6)}\t${l}`).join('\n');
+      },
+      grep: (params) => {
+        const pattern = String(params.pattern || '');
+        const filePath = String(params.path || params.repo_path || '.');
+        const glob = params.file_pattern ? `--glob '${params.file_pattern}'` : '';
+        const max = params.max_results ? `--max-count ${params.max_results}` : '';
+        try {
+          return execSync(`rg --no-heading --line-number ${max} ${glob} -- ${JSON.stringify(pattern)} ${JSON.stringify(filePath)}`, { encoding: 'utf-8', timeout: 30000 });
+        } catch (e: any) {
+          return e.stdout || '(no matches)';
+        }
+      },
+      glob: (params) => {
+        const dirPath = String(params.dir_path || params.path || '.');
+        const recursive = Boolean(params.recursive);
+        const includeHidden = Boolean(params.include_hidden);
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true, recursive });
+        return entries
+          .filter((e) => includeHidden || !e.name.startsWith('.'))
+          .map((e) => {
+            const rel = e.parentPath ? path.join(e.parentPath, e.name) : path.join(dirPath, e.name);
+            return e.isDirectory() ? `${rel}/` : rel;
+          })
+          .join('\n');
+      },
+    };
+
+    // -- Shadow tools: replace built-in read/grep/glob with cache-aware versions --
+    const makeShadowTool = (toolName: string, description: string, paramsDef: any) => ({
+      name: toolName,
+      description,
       parameters: paramsDef,
       execute: async (_id: string, params: Record<string, unknown>) => {
+        const sidecarTool = SIDECAR_TOOL[toolName];
+        // 1. Check cross-agent cache
         try {
-          const cached = await client.cacheCheck(toolName === 'read' ? 'deduped_read_file' : toolName === 'search' ? 'deduped_search' : 'deduped_list_files', params);
+          const cached = await client.cacheCheck(sidecarTool, params);
           if (cached.hit) return `[cache hit, age=${cached.age_s}s]\n${cached.result}`;
         } catch { /* fall through */ }
+        // 2. Try sidecar execution (reads file + stores in cache)
         try {
-          const sidecarTool = toolName === 'read' ? 'deduped_read_file' : toolName === 'search' ? 'deduped_search' : 'deduped_list_files';
           return await client.call(sidecarTool, params);
+        } catch { /* fall through */ }
+        // 3. Node.js fallback (graceful degradation when sidecar is down)
+        try {
+          const result = nodeFallback[toolName](params);
+          // Best-effort cache store so other agents still benefit
+          client.cacheStore(sidecarTool, params, result, cfg.cacheTTL).catch(() => {});
+          return result;
         } catch (e: any) {
-          return `AgentGlue error: ${e.message}`;
+          return `AgentGlue fallback error (${toolName}): ${e.message}`;
         }
       },
     });
 
-    api.registerTool(makeCachedTool('read', 'Read a file with cross-agent dedup cache', {
+    api.registerTool(makeShadowTool('read', 'Read a file (with cross-agent dedup cache)', {
       type: 'object',
       properties: {
         file_path: { type: 'string', description: 'Absolute path to the file' },
@@ -345,28 +401,29 @@ const agentGluePlugin = {
         limit: { type: 'integer', description: 'Max lines to read', default: 200 },
       },
       required: ['file_path'],
-    }));
+    }), { shadow: true });
 
-    api.registerTool(makeCachedTool('search', 'Search a repo with cross-agent dedup cache', {
+    api.registerTool(makeShadowTool('grep', 'Search files by pattern (with cross-agent dedup cache)', {
       type: 'object',
       properties: {
-        repo_path: { type: 'string', description: 'Absolute path to the repository' },
+        path: { type: 'string', description: 'File or directory to search in' },
         pattern: { type: 'string', description: 'Search pattern (regex)' },
-        file_pattern: { type: 'string', description: 'File glob', default: '*' },
+        file_pattern: { type: 'string', description: 'File glob filter', default: '*' },
         max_results: { type: 'integer', description: 'Max results', default: 50 },
       },
-      required: ['repo_path', 'pattern'],
-    }));
+      required: ['pattern'],
+    }), { shadow: true });
 
-    api.registerTool(makeCachedTool('list', 'List directory with cross-agent dedup cache', {
+    api.registerTool(makeShadowTool('glob', 'List files by glob pattern (with cross-agent dedup cache)', {
       type: 'object',
       properties: {
-        dir_path: { type: 'string', description: 'Absolute path to directory' },
+        path: { type: 'string', description: 'Directory to search in' },
+        pattern: { type: 'string', description: 'Glob pattern to match' },
         recursive: { type: 'boolean', description: 'Recursive listing', default: false },
         include_hidden: { type: 'boolean', description: 'Include hidden files', default: false },
       },
-      required: ['dir_path'],
-    }));
+      required: ['pattern'],
+    }), { shadow: true });
 
     // -- Metrics tool --
     api.registerTool({
@@ -394,7 +451,7 @@ const agentGluePlugin = {
       },
     });
 
-    log('Plugin registered (v0.3.2, SQLite backend)');
+    log('Plugin registered (v0.4.0, shadow tools + SQLite backend)');
   },
 };
 

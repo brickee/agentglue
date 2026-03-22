@@ -1,6 +1,6 @@
 {
   "name": "openclaw-agentglue",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "OpenClaw plugin — cross-process dedup cache for multi-agent tool calls via SQLite sidecar",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
