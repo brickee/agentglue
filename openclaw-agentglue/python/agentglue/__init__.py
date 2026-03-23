@@ -3,4 +3,4 @@
 from agentglue.runtime import AgentGlue
 
 __all__ = ["AgentGlue"]
-__version__ = "0.3.2"
+__version__ = "0.4.0"

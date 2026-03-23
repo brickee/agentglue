@@ -173,6 +173,18 @@ class _SqliteBackend:
         self._conn().commit()
         return cur.rowcount > 0
 
+    def invalidate_by_tool(self, tool_names: list[str]) -> int:
+        """Delete all cache entries whose tool_name is in the given list."""
+        if not tool_names:
+            return 0
+        placeholders = ",".join("?" for _ in tool_names)
+        cur = self._conn().execute(
+            f"DELETE FROM dedup_cache WHERE tool_name IN ({placeholders})",
+            tool_names,
+        )
+        self._conn().commit()
+        return cur.rowcount
+
     def clear(self) -> None:
         self._conn().execute("DELETE FROM dedup_cache")
         self._conn().commit()

@@ -82,6 +82,27 @@ class GlueMetrics:
             else:
                 self.shared_memory_misses += 1
 
+    def reset(self) -> None:
+        """Reset all counters to zero."""
+        with self._lock:
+            self.tool_calls_total = 0
+            self.tool_calls_underlying = 0
+            self.tool_calls_deduped = 0
+            self.tool_calls_coalesced = 0
+            self.cache_hits = 0
+            self.cache_misses = 0
+            self.latency_observed_ms = 0.0
+            self.latency_underlying_ms = 0.0
+            self.rate_limit_interventions = 0
+            self.rate_limit_wait_time_ms = 0.0
+            self.shared_memory_writes = 0
+            self.shared_memory_reads = 0
+            self.shared_memory_hits = 0
+            self.shared_memory_misses = 0
+            self.shared_memory_stale = 0
+            self.task_conflicts_detected = 0
+            self.task_conflicts_prevented = 0
+
     def record_conflict(self, prevented: bool = True) -> None:
         with self._lock:
             self.task_conflicts_detected += 1
@@ -124,6 +145,8 @@ class GlueMetrics:
             "tool_calls_deduped": self.tool_calls_deduped,
             "tool_calls_coalesced": self.tool_calls_coalesced,
             "calls_saved": self.calls_saved,
+            "cache_hits": self.cache_hits,
+            "cache_misses": self.cache_misses,
             "dedup_rate": self.dedup_rate,
             "cache_hit_rate": self.cache_hit_rate,
             "avg_observed_latency_ms": round(self.avg_observed_latency_ms, 3),

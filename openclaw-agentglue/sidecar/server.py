@@ -11,7 +11,12 @@ v0.3: SQLite-backed cross-process dedup cache with /cache/* endpoints.
 import hashlib
 import json
 import os
+import re
+import shlex
+import subprocess
 import sys
+import urllib.request
+import urllib.error
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
@@ -33,6 +38,11 @@ from agentglue import AgentGlue
 # Default DB path — configurable via --db-path CLI arg
 DEFAULT_DB_PATH = os.path.expanduser("~/.openclaw/cache/agentglue.db")
 DEFAULT_HOST = "127.0.0.1"
+
+# Ensure ~/.local/bin is in PATH for rg (ripgrep) and other user-installed tools
+_local_bin = os.path.expanduser("~/.local/bin")
+if _local_bin not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = _local_bin + ":" + os.environ.get("PATH", "")
 
 
 def create_glue(db_path: str = DEFAULT_DB_PATH) -> AgentGlue:
@@ -56,7 +66,6 @@ glue: AgentGlue = None  # initialized in run_server
 # Tools wrapped with AgentGlue middleware
 # ---------------------------------------------------------------------------
 
-@staticmethod
 def _register_tools(g: AgentGlue):
     """Register tools on the given AgentGlue instance."""
 
@@ -75,36 +84,65 @@ def _register_tools(g: AgentGlue):
 
     @g.tool(name="deduped_search", ttl=30.0, rate_limit=5.0)
     def deduped_search_tool(
-        repo_path: str,
         pattern: str,
-        file_pattern: str = "*",
-        max_results: int = 50,
+        path: str = ".",
+        repo_path: str = "",
+        glob: str = "",
+        file_pattern: str = "",
+        type: str = "",
+        output_mode: str = "content",
+        case_insensitive: bool = False,
+        multiline: bool = False,
+        context: int = 0,
+        after_context: int = 0,
+        before_context: int = 0,
+        head_limit: int = 0,
+        max_results: int = 0,
     ) -> str:
         import subprocess
 
-        if not os.path.isdir(repo_path):
-            return f"Error: Directory not found: {repo_path}"
+        search_path = repo_path or path or "."
+        cmd = ["rg", "--no-heading", "--line-number"]
+        # Glob / file type filters
+        glob_filter = glob or file_pattern
+        if glob_filter:
+            cmd.extend(["--glob", glob_filter])
+        if type:
+            cmd.extend(["--type", type])
+        # Flags
+        if case_insensitive:
+            cmd.append("-i")
+        if multiline:
+            cmd.extend(["-U", "--multiline-dotall"])
+        # Context
+        if context:
+            cmd.extend(["-C", str(context)])
+        else:
+            if after_context:
+                cmd.extend(["-A", str(after_context)])
+            if before_context:
+                cmd.extend(["-B", str(before_context)])
+        # Output mode
+        if output_mode == "files_with_matches":
+            cmd.append("-l")
+        elif output_mode == "count":
+            cmd.append("-c")
+        # Limit
+        limit = head_limit or max_results
+        if limit:
+            cmd.extend(["--max-count", str(limit)])
+        cmd.extend(["--", pattern, search_path])
         try:
-            cmd = ["grep", "-r", "-n", "--include", file_pattern, "-l", pattern, repo_path]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             if result.returncode == 1:
-                return f"No files found matching pattern '{pattern}' in {repo_path}"
+                return f"No matches found for '{pattern}'"
             if result.returncode != 0:
                 return f"Search error: {result.stderr}"
-            files = result.stdout.strip().split("\n")[:max_results]
-            if not files or files == [""]:
-                return f"No files found matching pattern '{pattern}'"
-            output_lines = [f"Found {len(files)} file(s) matching '{pattern}':\n"]
-            for f in files:
-                line_cmd = ["grep", "-n", "-C", "2", pattern, f]
-                lr = subprocess.run(line_cmd, capture_output=True, text=True, timeout=10)
-                matches = lr.stdout.strip() if lr.returncode == 0 else "(error reading file)"
-                if len(matches) > 500:
-                    matches = matches[:500] + "...\n[truncated]"
-                output_lines.append(f"\n=== {f} ===\n{matches}")
-            return "\n".join(output_lines)
+            return result.stdout.strip() or f"No matches found for '{pattern}'"
         except subprocess.TimeoutExpired:
             return "Error: Search timed out (30s limit)"
+        except FileNotFoundError:
+            return "Error: rg (ripgrep) not found; install it for search support"
         except Exception as e:
             return f"Error during search: {str(e)}"
 
@@ -149,12 +187,197 @@ def _register_tools(g: AgentGlue):
         except Exception as e:
             return f"Error listing directory: {str(e)}"
 
+    # ------------------------------------------------------------------
+    # Cached exec: read-only command whitelist
+    # ------------------------------------------------------------------
+
+    # Commands that are safe (read-only, no side effects)
+    EXEC_WHITELIST = {
+        "git", "ls", "cat", "head", "tail", "wc", "file", "stat",
+        "which", "env", "echo", "date", "uname", "whoami", "pwd",
+        "find", "tree", "du", "df",
+    }
+
+    # Git sub-commands that are safe (read-only)
+    GIT_SAFE_SUBCOMMANDS = {
+        "log", "status", "diff", "blame", "show", "branch", "tag",
+        "remote", "rev-parse", "describe", "shortlog", "stash list",
+        "ls-files", "ls-tree", "config", "reflog",
+    }
+
+    # Patterns that indicate dangerous operations even inside whitelisted commands
+    DANGEROUS_PATTERNS = re.compile(
+        r"(?:"
+        r"[>]{1,2}"       # redirections > or >>
+        r"|[|]\s*(?:rm|mv|cp|dd|mkfs|shred|tee)\b"  # pipes to dangerous cmds
+        r"|\brm\b"        # rm anywhere
+        r"|\bmv\b"        # mv anywhere
+        r"|\bcp\b"        # cp anywhere
+        r"|\bsudo\b"      # sudo anywhere
+        r"|\bchmod\b"     # chmod anywhere
+        r"|\bchown\b"     # chown anywhere
+        r"|\bkill\b"      # kill anywhere
+        r"|\bdd\b"        # dd anywhere
+        r"|\bmkdir\b"     # mkdir anywhere
+        r"|\brmdir\b"     # rmdir anywhere
+        r"|\btouch\b"     # touch anywhere
+        r"|\btruncate\b"  # truncate anywhere
+        r")",
+        re.IGNORECASE,
+    )
+
+    def _validate_exec_command(command: str) -> tuple[bool, str]:
+        """Validate a command against the read-only whitelist.
+
+        Returns (allowed, reason).
+        """
+        command = command.strip()
+        if not command:
+            return False, "Empty command"
+
+        # Check for dangerous patterns first
+        if DANGEROUS_PATTERNS.search(command):
+            return False, f"Command contains disallowed pattern (redirections, rm, mv, cp, sudo, etc.)"
+
+        # Split on pipes — every segment must start with a whitelisted command
+        segments = [s.strip() for s in command.split("|")]
+        for seg in segments:
+            if not seg:
+                continue
+            try:
+                parts = shlex.split(seg)
+            except ValueError:
+                # Fall back to simple split if shlex fails
+                parts = seg.split()
+            if not parts:
+                continue
+            base_cmd = os.path.basename(parts[0])
+
+            if base_cmd not in EXEC_WHITELIST:
+                return False, f"Command '{base_cmd}' is not in the read-only whitelist. Allowed: {', '.join(sorted(EXEC_WHITELIST))}"
+
+            # Extra validation for git: only allow safe sub-commands
+            if base_cmd == "git" and len(parts) > 1:
+                sub = parts[1]
+                if sub.startswith("-"):
+                    # flags like git --version are fine
+                    pass
+                elif sub not in GIT_SAFE_SUBCOMMANDS:
+                    return False, f"Git sub-command '{sub}' is not allowed. Safe sub-commands: {', '.join(sorted(GIT_SAFE_SUBCOMMANDS))}"
+
+        return True, "OK"
+
+    # TTL mapping for exec commands — shorter for fast-changing commands
+    def _exec_ttl(command: str) -> float:
+        cmd = command.strip().lower()
+        if cmd.startswith("git status"):
+            return 10.0
+        if cmd.startswith("git diff"):
+            return 15.0
+        if cmd.startswith("git log"):
+            return 60.0
+        if cmd.startswith("git"):
+            return 30.0
+        if cmd.startswith(("ls", "find", "tree")):
+            return 15.0
+        if cmd.startswith(("date", "env")):
+            return 5.0
+        return 30.0
+
+    @g.tool(name="deduped_exec", ttl=30.0, rate_limit=5.0)
+    def deduped_exec_tool(command: str, timeout: int = 30) -> str:
+        allowed, reason = _validate_exec_command(command)
+        if not allowed:
+            return f"Error: Command not allowed. {reason}"
+
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=min(timeout, 60),
+            )
+            output = result.stdout
+            if result.stderr:
+                output += ("\n" if output else "") + result.stderr
+            if not output.strip():
+                output = f"(command completed with exit code {result.returncode})"
+            return output.strip()
+        except subprocess.TimeoutExpired:
+            return f"Error: Command timed out after {timeout}s"
+        except Exception as e:
+            return f"Error executing command: {str(e)}"
+
+    # ------------------------------------------------------------------
+    # Cached web_fetch: HTTP GET via urllib
+    # ------------------------------------------------------------------
+
+    @g.tool(name="deduped_web_fetch", ttl=120.0, rate_limit=2.0)
+    def deduped_web_fetch_tool(url: str, headers: str = "{}") -> str:
+        """Fetch a URL and return its content."""
+        try:
+            parsed_headers = json.loads(headers) if isinstance(headers, str) else (headers or {})
+        except (json.JSONDecodeError, TypeError):
+            parsed_headers = {}
+
+        req = urllib.request.Request(url, method="GET")
+        req.add_header("User-Agent", "AgentGlue/0.5 (OpenClaw sidecar)")
+        for k, v in parsed_headers.items():
+            req.add_header(str(k), str(v))
+
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                content_type = resp.headers.get("Content-Type", "")
+                data = resp.read()
+                # Try to decode as text
+                charset = "utf-8"
+                if "charset=" in content_type:
+                    charset = content_type.split("charset=")[-1].split(";")[0].strip()
+                try:
+                    body = data.decode(charset)
+                except (UnicodeDecodeError, LookupError):
+                    body = data.decode("utf-8", errors="replace")
+                # Truncate very large responses
+                if len(body) > 100_000:
+                    body = body[:100_000] + f"\n\n... (truncated, {len(data)} bytes total)"
+                return f"HTTP {resp.status}\nContent-Type: {content_type}\n\n{body}"
+        except urllib.error.HTTPError as e:
+            body = ""
+            try:
+                body = e.read().decode("utf-8", errors="replace")[:5000]
+            except Exception:
+                pass
+            return f"HTTP Error {e.code}: {e.reason}\n{body}"
+        except urllib.error.URLError as e:
+            return f"URL Error: {str(e.reason)}"
+        except Exception as e:
+            return f"Error fetching URL: {str(e)}"
+
+    # ------------------------------------------------------------------
+    # Cached web_search: stub (no API key in sidecar)
+    # ------------------------------------------------------------------
+
+    @g.tool(name="deduped_web_search", ttl=300.0, rate_limit=1.0)
+    def deduped_web_search_tool(query: str, max_results: int = 5) -> str:
+        """Web search stub. Real caching happens via the after_tool_call hook
+        in TypeScript when the actual built-in web_search tool is used."""
+        return (
+            f"Web search not available in sidecar mode. "
+            f"Query '{query}' (max_results={max_results}) should be routed "
+            f"through the built-in web_search tool; results will be cached "
+            f"automatically by the after_tool_call hook."
+        )
+
     return {
         "search": search_tool,
         "metrics": metrics_tool,
         "deduped_search": deduped_search_tool,
         "deduped_read_file": deduped_read_file_tool,
         "deduped_list_files": deduped_list_files_tool,
+        "deduped_exec": deduped_exec_tool,
+        "deduped_web_fetch": deduped_web_fetch_tool,
+        "deduped_web_search": deduped_web_search_tool,
     }
 
 
@@ -209,6 +432,10 @@ class SidecarHandler(BaseHTTPRequestHandler):
             self._handle_cache_store()
         elif self.path == "/cache/stats":
             self._handle_cache_stats()
+        elif self.path == "/cache/invalidate":
+            self._handle_cache_invalidate()
+        elif self.path == "/cache/flush":
+            self._handle_cache_flush()
         else:
             self.send_json({"error": "Not found"}, 404)
 
@@ -226,7 +453,16 @@ class SidecarHandler(BaseHTTPRequestHandler):
             self.send_json({"error": f"Unknown tool: {tool}"}, 400)
             return
         try:
+            import time as _t
+            t0 = _t.monotonic()
             result = fn(**params)
+            elapsed_ms = (_t.monotonic() - t0) * 1000
+            # Record metrics for /call executions (not just /cache/check)
+            if glue.metrics:
+                glue.metrics.record_tool_call(
+                    deduped=False, cache_hit=False,
+                    latency_ms=elapsed_ms, underlying_latency_ms=elapsed_ms,
+                )
             self.send_json({"result": result})
         except Exception as e:
             self.send_json({"error": str(e)}, 500)
@@ -292,6 +528,35 @@ class SidecarHandler(BaseHTTPRequestHandler):
             stats["backend"] = glue.dedup.backend_type
         self.send_json(stats)
 
+    def _handle_cache_invalidate(self):
+        """Invalidate cache entries by tool name. Used after write operations."""
+        req = self._read_body()
+        if req is None:
+            return
+        tool_names = req.get("tool_names", [])
+        if not tool_names or not isinstance(tool_names, list):
+            self.send_json({"error": "Missing or invalid 'tool_names' list"}, 400)
+            return
+        deleted = 0
+        if glue.dedup and hasattr(glue.dedup, '_backend'):
+            backend = glue.dedup._backend
+            if hasattr(backend, 'invalidate_by_tool'):
+                deleted = backend.invalidate_by_tool(tool_names)
+        self.send_json({"invalidated": deleted, "tool_names": tool_names})
+
+    def _handle_cache_flush(self):
+        """Clear all cached entries. Used by benchmarks for per-task isolation."""
+        flushed = 0
+        if glue.dedup and hasattr(glue.dedup, '_backend'):
+            backend = glue.dedup._backend
+            if hasattr(backend, 'clear'):
+                backend.clear()
+                flushed = 1
+        # Also reset metrics counters so each task starts fresh
+        if glue.metrics:
+            glue.metrics.reset()
+        self.send_json({"flushed": True, "cleared": flushed})
+
 
 def run_server(host: str = DEFAULT_HOST, port: int = 8765, db_path: str = DEFAULT_DB_PATH):
     global glue, TOOLS
@@ -302,7 +567,7 @@ def run_server(host: str = DEFAULT_HOST, port: int = 8765, db_path: str = DEFAUL
     print(f"[AgentGlue Sidecar v0.3] http://{host}:{port}")
     print(f"[AgentGlue Sidecar] Backend: sqlite ({db_path})")
     print(f"[AgentGlue Sidecar] Tools: {', '.join(TOOLS.keys())}")
-    print(f"[AgentGlue Sidecar] Endpoints: /health /call /cache/check /cache/store /cache/stats")
+    print(f"[AgentGlue Sidecar] Endpoints: /health /call /cache/check /cache/store /cache/stats /cache/flush")
 
     try:
         server.serve_forever()
